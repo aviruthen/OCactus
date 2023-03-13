@@ -1,0 +1,79 @@
+(lang dune 3.7)
+(name Chess)
+(sections (lib .) (libexec .) (doc ../../doc/Chess))
+(files
+ (lib
+  (META
+   chess.a
+   chess.cma
+   chess.cmi
+   chess.cmt
+   chess.cmx
+   chess.cmxa
+   chess.ml
+   chess__Command.cmi
+   chess__Command.cmt
+   chess__Command.cmti
+   chess__Command.cmx
+   chess__Gui.cmi
+   chess__Gui.cmt
+   chess__Gui.cmti
+   chess__Gui.cmx
+   chess__Piece.cmi
+   chess__Piece.cmt
+   chess__Piece.cmti
+   chess__Piece.cmx
+   chess__State.cmi
+   chess__State.cmt
+   chess__State.cmti
+   chess__State.cmx
+   command.ml
+   command.mli
+   dune-package
+   gui.ml
+   gui.mli
+   opam
+   piece.ml
+   piece.mli
+   state.ml
+   state.mli))
+ (libexec (chess.cmxs))
+ (doc (LICENSE)))
+(library
+ (name Chess)
+ (kind normal)
+ (archives (byte chess.cma) (native chess.cmxa))
+ (plugins (byte chess.cma) (native chess.cmxs))
+ (native_archives chess.a)
+ (main_module_name Chess)
+ (modes byte native)
+ (modules
+  (wrapped
+   (group
+    (alias
+     (obj_name chess)
+     (visibility public)
+     (kind alias)
+     (source (path Chess) (impl (path chess.ml-gen))))
+    (name Chess)
+    (modules
+     (module
+      (obj_name chess__Command)
+      (visibility public)
+      (source
+       (path Command)
+       (intf (path command.mli))
+       (impl (path command.ml))))
+     (module
+      (obj_name chess__Gui)
+      (visibility public)
+      (source (path Gui) (intf (path gui.mli)) (impl (path gui.ml))))
+     (module
+      (obj_name chess__Piece)
+      (visibility public)
+      (source (path Piece) (intf (path piece.mli)) (impl (path piece.ml))))
+     (module
+      (obj_name chess__State)
+      (visibility public)
+      (source (path State) (intf (path state.mli)) (impl (path state.ml))))))
+   (wrapped true))))
