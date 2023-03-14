@@ -1,6 +1,0 @@
-description = ""
-requires = ""
-archive(byte) = "chess.cma"
-archive(native) = "chess.cmxa"
-plugin(byte) = "chess.cma"
-plugin(native) = "chess.cmxs"
