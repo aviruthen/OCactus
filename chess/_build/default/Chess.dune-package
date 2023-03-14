@@ -19,10 +19,6 @@
    chess__Gui.cmt
    chess__Gui.cmti
    chess__Gui.cmx
-   chess__Piece.cmi
-   chess__Piece.cmt
-   chess__Piece.cmti
-   chess__Piece.cmx
    chess__State.cmi
    chess__State.cmt
    chess__State.cmti
@@ -33,8 +29,6 @@
    gui.ml
    gui.mli
    opam
-   piece.ml
-   piece.mli
    state.ml
    state.mli))
  (libexec (chess.cmxs))
@@ -68,10 +62,6 @@
       (obj_name chess__Gui)
       (visibility public)
       (source (path Gui) (intf (path gui.mli)) (impl (path gui.ml))))
-     (module
-      (obj_name chess__Piece)
-      (visibility public)
-      (source (path Piece) (intf (path piece.mli)) (impl (path piece.ml))))
      (module
       (obj_name chess__State)
       (visibility public)

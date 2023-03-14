@@ -1,9 +1,9 @@
-# dune exec bin/main.exe
+# dune build
 # OCAMLPARAM: unset
 # Shared cache: disabled
-# Workspace root: /Users/deanzhang/3110/chess
-# Auto-detected concurrency: 12
-$ /Users/deanzhang/.opam/cs3110-2023sp/bin/ocamlc.opt -config > /var/folders/99/dmj54x6n4klcqt7rgz0m0lmr0000gn/T/dune_254e2c_output
+# Workspace root: /Users/kevincui/Desktop/Ocactus/chess
+# Auto-detected concurrency: 8
+$ /Users/kevincui/.opam/cs3110-2023sp/bin/ocamlc.opt -config > /var/folders/gy/w3z_hmt91cdgnk0k9mmzq6g40000gn/T/dune_6e022b_output
 # Dune context:
 #  { name = "default"
 #  ; kind = "default"
@@ -13,42 +13,42 @@ $ /Users/deanzhang/.opam/cs3110-2023sp/bin/ocamlc.opt -config > /var/folders/99/
 #  ; fdo_target_exe = None
 #  ; build_dir = In_build_dir "default"
 #  ; toplevel_path =
-#      Some External "/Users/deanzhang/.opam/cs3110-2023sp/lib/toplevel"
-#  ; ocaml_bin = External "/Users/deanzhang/.opam/cs3110-2023sp/bin"
-#  ; ocaml = Ok External "/Users/deanzhang/.opam/cs3110-2023sp/bin/ocaml"
-#  ; ocamlc = External "/Users/deanzhang/.opam/cs3110-2023sp/bin/ocamlc.opt"
+#      Some External "/Users/kevincui/.opam/cs3110-2023sp/lib/toplevel"
+#  ; ocaml_bin = External "/Users/kevincui/.opam/cs3110-2023sp/bin"
+#  ; ocaml = Ok External "/Users/kevincui/.opam/cs3110-2023sp/bin/ocaml"
+#  ; ocamlc = External "/Users/kevincui/.opam/cs3110-2023sp/bin/ocamlc.opt"
 #  ; ocamlopt =
-#      Ok External "/Users/deanzhang/.opam/cs3110-2023sp/bin/ocamlopt.opt"
+#      Ok External "/Users/kevincui/.opam/cs3110-2023sp/bin/ocamlopt.opt"
 #  ; ocamldep =
-#      Ok External "/Users/deanzhang/.opam/cs3110-2023sp/bin/ocamldep.opt"
+#      Ok External "/Users/kevincui/.opam/cs3110-2023sp/bin/ocamldep.opt"
 #  ; ocamlmklib =
-#      Ok External "/Users/deanzhang/.opam/cs3110-2023sp/bin/ocamlmklib.opt"
+#      Ok External "/Users/kevincui/.opam/cs3110-2023sp/bin/ocamlmklib.opt"
 #  ; env =
 #      map
-#        { "DUNE_OCAML_HARDCODED" : "/Users/deanzhang/.opam/cs3110-2023sp/lib"
+#        { "DUNE_OCAML_HARDCODED" : "/Users/kevincui/.opam/cs3110-2023sp/lib"
 #        ; "DUNE_OCAML_STDLIB" :
-#            "/Users/deanzhang/.opam/cs3110-2023sp/lib/ocaml"
-#        ; "DUNE_SOURCEROOT" : "/Users/deanzhang/3110/chess"
-#        ; "INSIDE_DUNE" : "/Users/deanzhang/3110/chess/_build/default"
-#        ; "MANPATH" : "/Users/deanzhang/3110/chess/_build/install/default/bin"
+#            "/Users/kevincui/.opam/cs3110-2023sp/lib/ocaml"
+#        ; "DUNE_SOURCEROOT" : "/Users/kevincui/Desktop/Ocactus/chess"
+#        ; "INSIDE_DUNE" :
+#            "/Users/kevincui/Desktop/Ocactus/chess/_build/default"
 #        ; "OCAMLFIND_IGNORE_DUPS_IN" :
-#            "/Users/deanzhang/3110/chess/_build/install/default/lib"
+#            "/Users/kevincui/Desktop/Ocactus/chess/_build/install/default/lib"
 #        ; "OCAMLPATH" :
-#            "/Users/deanzhang/3110/chess/_build/install/default/lib"
+#            "/Users/kevincui/Desktop/Ocactus/chess/_build/install/default/lib"
 #        ; "OCAMLTOP_INCLUDE_PATH" :
-#            "/Users/deanzhang/3110/chess/_build/install/default/lib/toplevel"
+#            "/Users/kevincui/Desktop/Ocactus/chess/_build/install/default/lib/toplevel"
 #        ; "OCAML_COLOR" : "always"
 #        ; "OPAMCOLOR" : "always"
 #        }
-#  ; findlib_paths = [ External "/Users/deanzhang/.opam/cs3110-2023sp/lib" ]
+#  ; findlib_paths = [ External "/Users/kevincui/.opam/cs3110-2023sp/lib" ]
 #  ; arch_sixtyfour = true
 #  ; natdynlink_supported = true
 #  ; supports_shared_libraries = true
 #  ; ocaml_config =
 #      { version = "4.14.0"
 #      ; standard_library_default =
-#          "/Users/deanzhang/.opam/cs3110-2023sp/lib/ocaml"
-#      ; standard_library = "/Users/deanzhang/.opam/cs3110-2023sp/lib/ocaml"
+#          "/Users/kevincui/.opam/cs3110-2023sp/lib/ocaml"
+#      ; standard_library = "/Users/kevincui/.opam/cs3110-2023sp/lib/ocaml"
 #      ; standard_runtime = "the_standard_runtime_variable_was_deleted"
 #      ; ccomp_type = "cc"
 #      ; c_compiler = "cc"
@@ -78,7 +78,7 @@ $ /Users/deanzhang/.opam/cs3110-2023sp/bin/ocamlc.opt -config > /var/folders/99/
 #      ; native_c_libraries = [ "-lm" ]
 #      ; native_pack_linker = [ "ld"; "-r"; "-o" ]
 #      ; cc_profile = []
-#      ; architecture = "amd64"
+#      ; architecture = "arm64"
 #      ; model = "default"
 #      ; int_size = 63
 #      ; word_size = 64
@@ -94,8 +94,8 @@ $ /Users/deanzhang/.opam/cs3110-2023sp/bin/ocamlc.opt -config > /var/folders/99/
 #      ; os_type = "Unix"
 #      ; default_executable_name = "a.out"
 #      ; systhread_supported = true
-#      ; host = "x86_64-apple-darwin22.2.0"
-#      ; target = "x86_64-apple-darwin22.2.0"
+#      ; host = "aarch64-apple-darwin21.6.0"
+#      ; target = "aarch64-apple-darwin21.6.0"
 #      ; profiling = false
 #      ; flambda = false
 #      ; spacetime = false
@@ -115,3 +115,11 @@ $ /Users/deanzhang/.opam/cs3110-2023sp/bin/ocamlc.opt -config > /var/folders/99/
 #      ; windows_unicode = false
 #      }
 #  }
+$ (cd _build/default && /Users/kevincui/.opam/cs3110-2023sp/bin/ocamlc.opt -w +a-4-6-7-9-27-29-30-32..42-44-45-48-50-60-66..70 -warn-error -a+31 -g -bin-annot -I test/.main.eobjs/byte -I /Users/kevincui/.opam/cs3110-2023sp/lib/ounit2 -I /Users/kevincui/.opam/cs3110-2023sp/lib/ounit2/advanced -I /Users/kevincui/.opam/cs3110-2023sp/lib/seq -I /Users/kevincui/.opam/cs3110-2023sp/lib/stdlib-shims -I src/.chess.objs/byte -no-alias-deps -opaque -o test/.main.eobjs/byte/dune__exe__Main.cmi -c -intf test/main.mli)
+$ (cd _build/default && /Users/kevincui/.opam/cs3110-2023sp/bin/ocamldep.opt -modules -impl src/state.ml) > _build/default/src/.chess.objs/chess__State.impl.d
+$ (cd _build/default && /Users/kevincui/.opam/cs3110-2023sp/bin/ocamlc.opt -w +a-4-6-7-9-27-29-30-32..42-44-45-48-50-60-66..70 -warn-error -a+31 -g -bin-annot -I src/.chess.objs/byte -intf-suffix .ml -no-alias-deps -opaque -open Chess -o src/.chess.objs/byte/chess__State.cmo -c -impl src/state.ml)
+$ (cd _build/default && /Users/kevincui/.opam/cs3110-2023sp/bin/ocamlc.opt -w +a-4-6-7-9-27-29-30-32..42-44-45-48-50-60-66..70 -warn-error -a+31 -g -a -o src/chess.cma src/.chess.objs/byte/chess.cmo src/.chess.objs/byte/chess__State.cmo src/.chess.objs/byte/chess__Gui.cmo src/.chess.objs/byte/chess__Command.cmo)
+$ (cd _build/default && /Users/kevincui/.opam/cs3110-2023sp/bin/ocamlopt.opt -w +a-4-6-7-9-27-29-30-32..42-44-45-48-50-60-66..70 -warn-error -a+31 -g -I src/.chess.objs/byte -I src/.chess.objs/native -intf-suffix .ml -no-alias-deps -opaque -open Chess -o src/.chess.objs/native/chess__State.cmx -c -impl src/state.ml)
+$ (cd _build/default && /Users/kevincui/.opam/cs3110-2023sp/bin/ocamlopt.opt -w +a-4-6-7-9-27-29-30-32..42-44-45-48-50-60-66..70 -warn-error -a+31 -g -I test/.main.eobjs/byte -I test/.main.eobjs/native -I /Users/kevincui/.opam/cs3110-2023sp/lib/ounit2 -I /Users/kevincui/.opam/cs3110-2023sp/lib/ounit2/advanced -I /Users/kevincui/.opam/cs3110-2023sp/lib/seq -I /Users/kevincui/.opam/cs3110-2023sp/lib/stdlib-shims -I src/.chess.objs/byte -I src/.chess.objs/native -intf-suffix .ml -no-alias-deps -opaque -o test/.main.eobjs/native/dune__exe__Main.cmx -c -impl test/main.ml)
+$ (cd _build/default && /Users/kevincui/.opam/cs3110-2023sp/bin/ocamlopt.opt -w +a-4-6-7-9-27-29-30-32..42-44-45-48-50-60-66..70 -warn-error -a+31 -g -shared -linkall -I src -o src/chess.cmxs src/chess.cmxa)
+$ (cd _build/default && /Users/kevincui/.opam/cs3110-2023sp/bin/ocamlopt.opt -w +a-4-6-7-9-27-29-30-32..42-44-45-48-50-60-66..70 -warn-error -a+31 -g -o test/main.exe src/chess.cmxa /Users/kevincui/.opam/cs3110-2023sp/lib/ocaml/unix.cmxa -I /Users/kevincui/.opam/cs3110-2023sp/lib/ocaml -I /Users/kevincui/.opam/cs3110-2023sp/lib/ocaml /Users/kevincui/.opam/cs3110-2023sp/lib/stdlib-shims/stdlib_shims.cmxa /Users/kevincui/.opam/cs3110-2023sp/lib/ounit2/advanced/oUnitAdvanced.cmxa /Users/kevincui/.opam/cs3110-2023sp/lib/ounit2/oUnit.cmxa test/.main.eobjs/native/dune__exe__Main.cmx)
