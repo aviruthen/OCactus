@@ -1,3 +1,5 @@
+type t
+
 (** Given a user or computer input, command.ml translates the input into
     information that can be used to generate a new move in the game. Command
     should check to determine if the move is a valid move, and also should
