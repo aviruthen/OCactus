@@ -660,7 +660,8 @@ let rec list_range range lst =
 let rec print_board board_state range =
   let range_as_list = list_range range [] in
   match List.rev range_as_list with
-  | [] -> Stdlib.print_string "\ndone!"
+  (* | [] -> Stdlib.print_string "\ndone!" *)
+  | [] -> Stdlib.print_string "\n"
   | h :: t ->
       if Int64.logand (Int64.shift_right_logical board_state.b_pawns h) 1L = 1L
       then Stdlib.print_string "P"
@@ -706,10 +707,29 @@ let rec print_board board_state range =
 
       print_board board_state (range - 1)
 
+
+
+
+let pseudolegal_moves_working (board_state : board_state) :
+    (Int64.t * Int64.t * board_state) list =
+  List.map
+      (fun move -> move_piece_board board_state move "p")
+      (moves_pawn_single board_state board_state.w_turn)
+  @ List.map
+      (fun move -> move_piece_board board_state move "p")
+        (moves_pawn_double board_state board_state.w_turn)
+      
+let rec print_moves = function
+| [] -> ()
+| (a,b,c) :: t -> print_string 
+  ((Int64.to_string a) ^ " " ^ (Int64.to_string b) ^ "\n"); 
+  print_moves t
+
 let move bs cmd = 
-  let move_set = all_legal_moves (pseudolegal_moves bs) in 
+  let move_set = all_legal_moves (pseudolegal_moves_working bs) in 
   let (s,e) = process_square cmd in 
-  let (_,_,mb) = List.hd 
-    (List.filter (fun (a,b,_) -> (s,e) = (a,b)) move_set) in
-  mb
+  let _ = print_string ((Int64.to_string s) ^ " " ^ (Int64.to_string e) ^ "\n") in
+  let valid_move_list = List.filter (fun (a,b,_) -> s = a && e = b) move_set in 
+  if List.length valid_move_list < 1 then bs else 
+    let (_,_,next_board) = List.hd valid_move_list in next_board
 
