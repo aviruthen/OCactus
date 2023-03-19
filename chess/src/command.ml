@@ -1,6 +1,33 @@
-type t = { command : string }
+type t = { command : string * string }
 
-let parse str = raise (Failure "Unimplemented")
-let valid_actions str = raise (Failure "Unimplemented")
-let move str = raise (Failure "Unimplemented")
-let get_command cmd = cmd.command
+exception MalformedInput
+
+let parse inp = 
+  let sq_list = String.split_on_char ' ' inp in
+  if (List.length sq_list) <> 2 then raise MalformedInput else
+    match sq_list with
+    | a :: b :: [] -> 
+      if (String.length a <> 2) || (String.length b <> 2) 
+        then raise MalformedInput 
+      else 
+        let sq1l = Char.lowercase_ascii (String.get a 0) in
+        let sq1n = String.get a 1 in
+        let sq2l = Char.lowercase_ascii (String.get b 0) in 
+        let sq2n = String.get b 1 in if
+        (Char.code sq1l - 97 < 0) || 
+        (Char.code sq1l - 97 > 7) || 
+        (Char.code sq2l - 97 < 0) ||
+        (Char.code sq2l - 97 > 7) ||
+        (Char.code sq1n - 49 < 0) ||
+        (Char.code sq1n - 49 > 7) ||
+        (Char.code sq2n - 49 < 0) ||
+        (Char.code sq2n - 49 > 7) then raise MalformedInput else
+          let sq1 = (Char.escaped sq1l) ^ (Char.escaped sq1n) in
+          let sq2 = (Char.escaped sq2l) ^ (Char.escaped sq2n) in
+          if sq1 = sq2 then raise MalformedInput 
+          else
+          {command = (sq1,sq2)}
+    | _ -> raise MalformedInput
+
+let get_command cmd = 
+  let (a,b) = cmd.command in (a ^ " " ^ b)

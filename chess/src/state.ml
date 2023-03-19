@@ -653,9 +653,10 @@ let process_square cmd =
    Command.t *)
 let process_piece cmd = raise (Failure "Unimplemented")
 
-(** game ending in this step if that is the case), queries and repeatedly waits
-    for command corresponding to legal move, then recurses on BoardState
-    corresponding to chosen move *)
+(* Given board_state, computes all legal moves (and prInt64.ts message about the
+   game ending in this step if that is the case), queries and repeatedly waits
+   for command corresponding to legal move, then recurses on BoardState
+   corresponding to chosen move *)
 let rec_func (board_state : board_state) = raise (Failure "Unimplemented")
 
 (** list_range 10 [] returns [0; 1; 2; 3; 4; 5; 6; 7; 8; 9] *)
@@ -710,3 +711,7 @@ let rec print_board board_state range =
       if h mod 8 = 0 then Stdlib.print_string "\n" else Stdlib.print_string "";
 
       print_board board_state (range - 1)
+
+let move bs cmd = 
+  let move_set = all_legal_moves (pseudolegal_moves bs) in 
+  raise (Failure "Unimplemented")
