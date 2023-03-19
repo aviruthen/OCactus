@@ -23,6 +23,7 @@ type board_state = {
   in_check_b : bool;
 }
 
+<<<<<<< Updated upstream
 let init_chess = {
    b_pawns = Int64.(logxor (shift_right_logical (minus_one) 8) (shift_right_logical (minus_one) 16));
    b_bishops = Int64.(shift_left (logor (shift_left (one) 2) (shift_left (one) 5)) 56);
@@ -47,6 +48,25 @@ let init_chess = {
    in_check_w = false;
    in_check_b = false;
 }
+=======
+let white_last_file =
+  Int64.logxor
+    (Int64.shift_right_logical Int64.minus_one 8)
+    (Int64.shift_right_logical Int64.minus_one 16)
+
+let black_last_file =
+  Int64.logxor
+    (Int64.shift_left Int64.minus_one 8)
+    (Int64.shift_left Int64.minus_one 16)
+
+let white_first_files = Int64.shift_right_logical Int64.minus_one 8
+let black_first_files = Int64.shift_left Int64.minus_one 8
+
+let rec logarithm (num : Int64.t) (acc : int) : int = 
+  if num = Int64.one then acc else logarithm (Int64.shift_right_logical num 1) (acc + 1)
+
+let logarithm_iter (num : Int64.t) = logarithm num 0
+>>>>>>> Stashed changes
 
 let pseudolegal_moves (board_state : board_state) :
     (Int64.t * Int64.t * board_state) list =
@@ -164,14 +184,15 @@ let moves_pawn_double (board_state : board_state) (white_turn : bool) :
   else
     let rank =
       Int64.logxor
-        (Int64.shift_right_logical Int64.minus_one 8)
-        (Int64.shift_right_logical Int64.minus_one 16)
+        (Int64.shift_left Int64.minus_one 8)
+        (Int64.shift_left Int64.minus_one 16)
     in
     move_pawn_double_helper board_state white_turn
       (Int64.shift_left Int64.one 55)
       rank
 
-let moves_pawn_forward (board_state : board_state) (white_turn : bool)
+(* Enumerates all forward pawn moves as long as square not blocked*)
+let _moves_pawn_forward (board_state : board_state) (white_turn : bool)
     (filter : Int64.t) : (Int64.t * Int64.t) list =
   let filtered =
     if white_turn then Int64.logand filter board_state.w_pawns
@@ -195,7 +216,8 @@ let moves_pawn_forward (board_state : board_state) (white_turn : bool)
     (bit_loop_iter original_positions)
     (bit_loop_iter valid_positions)
 
-let moves_pawn_capture (board_state : board_state) (white_turn : bool)
+(* Enumerates all diagonal pawn moves regardless of if to position is occupied*)
+let _moves_pawn_diagonal (board_state : board_state) (white_turn : bool)
     (filter : Int64.t) : (Int64.t * Int64.t) list =
   let filtered =
     if white_turn then Int64.logand filter board_state.w_pawns
@@ -216,13 +238,8 @@ let moves_pawn_capture (board_state : board_state) (white_turn : bool)
     (list_join_iter original_positions (bit_loop_iter new_positions_left))
     (list_join_iter original_positions (bit_loop_iter new_positions_right))
 
-let moves_pawn_single (board_state : board_state) (white_turn : bool) :
-    (Int64.t * Int64.t) list =
-  let filter =
-    if white_turn then Int64.shift_right_logical Int64.minus_one 16
-    else Int64.shift_left Int64.minus_one 16
-  in
-  let forward_moves = moves_pawn_forward board_state white_turn filter in
+(* filters pawns and finds all pseudolegal captures *)
+let _moves_pawn_cap (board_state : board_state) (white_turn : bool) (filter : Int64.t) : (Int64.t * Int64.t) list =
   let filtered_pawns =
     if white_turn then Int64.logand filter board_state.w_pawns
     else Int64.logand filter board_state.b_pawns
@@ -245,20 +262,36 @@ let moves_pawn_single (board_state : board_state) (white_turn : bool) :
     else Int64.shift_left can_atk_right 7
   in
   let filter = Int64.logor original_atk_left original_atk_right in
-  let capture_moves = moves_pawn_capture board_state white_turn filter in
+  _moves_pawn_diagonal board_state white_turn filter
+
+let moves_pawn_single (board_state : board_state) (white_turn : bool) :
+    (Int64.t * Int64.t) list =
+  let filter = if white_turn then white_first_files else black_first_files in
+  let forward_moves = _moves_pawn_forward board_state white_turn filter in
+  let capture_moves = _moves_pawn_cap board_state white_turn filter in
+  let ep = if board_state.ep = Int64.zero then [] else
+    let row = (logarithm_iter board_state.ep) / 8 in
+    let ones_row = Int64.shift_left black_last_file (row * 8) in
+    let ep_neighbors = Int64.logor (Int64.shift_left board_state.ep 1) (Int64.shift_right_logical board_state.ep 1) in
+    let ep_neighbors = Int64.logand ep_neighbors ones_row in
+    let ep_candidates = if white_turn then Int64.logand ep_neighbors board_state.w_pawns else Int64.logand ep_neighbors board_state.b_pawns in
+    [] 
+  in
   List.append forward_moves capture_moves
 
 let moves_pawn_attacks (board_state : board_state) (white_turn : bool) :
     (Int64.t * Int64.t) list =
-  moves_pawn_capture board_state white_turn Int64.minus_one
+  _moves_pawn_diagonal board_state white_turn Int64.minus_one
 
 let moves_promote_no_cap (board_state : board_state) (white_turn : bool) :
     (Int64.t * Int64.t) list =
-  raise (Failure "Unimplemented")
+  let filter = if white_turn then white_last_file else black_last_file in
+  _moves_pawn_forward board_state white_turn filter
 
 let moves_promote_cap (board_state : board_state) (white_turn : bool) :
     (Int64.t * Int64.t) list =
-  raise (Failure "Unimplemented")
+  let filter = if white_turn then white_last_file else black_last_file in
+  _moves_pawn_cap board_state white_turn filter
 
 let list_or (bitmaps : (Int64.t * Int64.t) list) : Int64.t =
   let bitmaps = List.map (fun tup -> fst tup) bitmaps in
@@ -308,6 +341,10 @@ let process_square cmd =
 let process_piece cmd = raise (Failure "Unimplemented")
 
 (* Given board_state, computes all legal moves (and prInt64.ts message about the
+   game ending in this step if that is the case), queries and repeatedly waits
+   for command corresponding to legal move, then recurses on BoardState
+   corresponding to chosen move *)
+let rec_func (board_state : board_state) = raise (Failure "Unimplemented")
    game ending in this step if that is the case), queries and repeatedly waits
    for command corresponding to legal move, then recurses on BoardState
    corresponding to chosen move *)
