@@ -23,13 +23,38 @@ type board_state = {
   in_check_b : bool;
 }
 
+let init_chess = {
+   b_pawns = Int64.(logxor (shift_right_logical (minus_one) 8) (shift_right_logical (minus_one) 16));
+   b_bishops = Int64.(shift_left (logor (shift_left (one) 2) (shift_left (one) 5)) 56);
+   b_knights = Int64.(shift_left (logor (shift_left (one) 1) (shift_left (one) 6)) 56);
+   b_rooks = Int64.(shift_left (logor one (shift_left (one) 7)) 56);
+   b_queen = Int64.(shift_left one 60);
+   b_king = Int64.(shift_left one 59);
+   w_pawns = Int64.(logxor (shift_right_logical (minus_one) 48) (shift_right_logical (minus_one) 56));
+   w_bishops = Int64.(logor (shift_left (one) 2) (shift_left (one) 5));
+   w_knights = Int64.(logor (shift_left (one) 1) (shift_left (one) 6));
+   w_rooks = Int64.(logor one (shift_left (one) 7));
+   w_queen = Int64.(shift_left one 4);
+   w_king = Int64.(shift_left one 3);
+   all_whites = Int64.(shift_right_logical minus_one 48);
+   all_blacks = Int64.(logxor minus_one (shift_right_logical (minus_one) 16));
+   ep = Int64.zero;
+   b_castle_l = false;
+   b_castle_r = false;
+   w_castle_l = false;
+   w_castle_r = false;
+   w_turn = true;
+   in_check_w = false;
+   in_check_b = false;
+}
+
 let pseudolegal_moves (board_state : board_state) :
     (Int64.t * Int64.t * board_state) list =
   raise (Failure "Unimplemented")
 
 let all_legal_moves (board_moves : (Int64.t * Int64.t * board_state) list) :
     (Int64.t * Int64.t * board_state) list =
-  raise (Failure "Unimplemented")
+    List.filter (fun (_,_,c) -> (not c.w_turn <>  c.in_check_w) || (c.w_turn <>  c.in_check_b)) board_moves
 
 let rec bit_loop (bitmap : Int64.t) (acc_maps : Int64.t list) (acc_count : int)
     : Int64.t list =

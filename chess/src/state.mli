@@ -1,6 +1,9 @@
 type board_state
 (** abstract type of board *)
 
+val init_chess : board_state
+(** Initializes a chess board before any moves have been made *)
+
 val pseudolegal_moves : board_state -> (Int64.t * Int64.t * board_state) list
 (** Given board_state, generate all pseudolegal moves (piece isn't blocked and
     stays on board) represented by from, to positions and new BoardState; call
