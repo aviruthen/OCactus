@@ -24,9 +24,8 @@ val moves_king : board_state -> bool -> (Int64.t * Int64.t) list
     include castling *)
 
 val moves_kingcastle : board_state -> bool -> (Int64.t * Int64.t) list
-(** Given board_state, generate all pseudolegal castlings (as long as no piece
-    blocking ) represented by (from position, to position) indicating king's
-    position (true for white, false for black); is list because 2 possible moves *)
+(** Given board_state, generate all LEGAL castlings represented by (from position,
+    to position) indicating king's position (true for white, false for black) *)
 
 val moves_queen : board_state -> bool -> (Int64.t * Int64.t) list
 (** Given board_state, generate all pseudolegal moves for queen (true for white,
