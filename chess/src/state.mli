@@ -51,9 +51,15 @@ val moves_pawn_double : board_state -> bool -> (Int64.t * Int64.t) list
     position)*)
 
 val moves_pawn_single : board_state -> bool -> (Int64.t * Int64.t) list
-(** Given board_state, generate all pseudolegal moves (including regular and EP
-    captures) for pawn single move forward except for promotions (true for
-    white, false for black) *)
+(** Given board_state, generate all pseudolegal moves (excluding EP captures) for 
+    pawn single move forward or diagonal except for promotions (true for
+    white, false for black) represented by (from position, to
+    position) *)
+
+val moves_ep_captures : board_state -> bool -> (Int64.t * Int64.t) list
+(** Given board_state, generate all pseudolegal EP captures (true for
+    white, false for black) represented by (from position, to
+    position) *)
 
 val moves_pawn_attacks : board_state -> bool -> (Int64.t * Int64.t) list
 (** Given board_state, generate all squares attacked by pawns represented by

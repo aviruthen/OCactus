@@ -105,6 +105,7 @@ let rec list_join (list1 : Int64.t list) (list2 : Int64.t list)
     list_join (List.tl list1) (List.tl list2)
       ((List.hd list1, List.hd list2) :: acc)
 
+(* The first list must be the shortest *)
 let list_join_iter (list1 : Int64.t list) (list2 : Int64.t list) :
     (Int64.t * Int64.t) list =
   list_join list1 list2 []
@@ -133,72 +134,42 @@ let moves_bishop (board_state : board_state) (white_turn : bool) :
     (Int64.t * Int64.t) list =
   raise (Failure "Unimplemented")
 
-let rec move_pawn_double_helper (board_state : board_state) (white_turn : bool)
-    (mask : Int64.t) (color_mask : Int64.t) : (Int64.t * Int64.t) list =
-  let occupied = Int64.logor board_state.all_whites board_state.all_blacks in
-  if white_turn then
-    let to_pos = Int64.shift_left mask 16 in
-    match
-      if
-        Int64.zero <> Int64.logand mask board_state.w_pawns
-        && Int64.zero <> Int64.logand mask color_mask
-        && Int64.zero
-           <> Int64.logor
-                (Int64.logand (Int64.shift_left mask 8) occupied)
-                (Int64.logand to_pos occupied)
-      then Some (mask, to_pos)
-      else None
-    with
-    | Some tup ->
-        tup
-        :: move_pawn_double_helper board_state white_turn
-             (Int64.shift_left mask 1) color_mask
-    | None ->
-        move_pawn_double_helper board_state white_turn (Int64.shift_left mask 1)
-          color_mask
-  else
-    let to_pos = Int64.shift_right_logical mask 16 in
-    match
-      if
-        Int64.zero <> Int64.logand mask board_state.b_pawns
-        && Int64.zero <> Int64.logand mask color_mask
-        && Int64.zero
-           <> Int64.logor
-                (Int64.logand (Int64.shift_right_logical mask 8) occupied)
-                (Int64.logand to_pos occupied)
-      then Some (mask, to_pos)
-      else None
-    with
-    | Some tup ->
-        tup
-        :: move_pawn_double_helper board_state white_turn
-             (Int64.shift_right_logical mask 1)
-             color_mask
-    | None ->
-        move_pawn_double_helper board_state white_turn
-          (Int64.shift_right_logical mask 1)
-          color_mask
-
 let moves_pawn_double (board_state : board_state) (white_turn : bool) :
     (Int64.t * Int64.t) list =
-  if white_turn then
-    let rank =
-      Int64.logxor
-        (Int64.shift_right_logical Int64.minus_one 48)
-        (Int64.shift_right_logical Int64.minus_one 56)
-    in
-    move_pawn_double_helper board_state white_turn
-      (Int64.shift_left Int64.one 8)
-      rank
-  else
-    let rank =
-      Int64.logxor
-        (Int64.shift_left Int64.minus_one 8)
-        (Int64.shift_left Int64.minus_one 16)
-    in
-    move_pawn_double_helper board_state white_turn
-      (Int64.shift_left Int64.one 55)
-      rank
+  let filtered_pawns =
+    if white_turn then
+      Int64.logand board_state.w_pawns (Int64.shift_left black_last_file 8)
+    else
+      Int64.logand board_state.b_pawns
+        (Int64.shift_right_logical white_last_file 8)
+  in
+  let occupied = Int64.logor board_state.all_blacks board_state.all_whites in
+  let forward_1 =
+    if white_turn then
+      Int64.logand occupied (Int64.shift_left black_last_file 16)
+    else Int64.logand occupied (Int64.shift_right_logical white_last_file 16)
+  in
+  let forward_2 =
+    if white_turn then
+      Int64.logand occupied (Int64.shift_left black_last_file 24)
+    else Int64.logand occupied (Int64.shift_right_logical white_last_file 24)
+  in
+  let forward_filter =
+    if white_turn then
+      Int64.logor
+        (Int64.shift_right_logical forward_1 8)
+        (Int64.shift_right_logical forward_2 16)
+    else
+      Int64.logor (Int64.shift_left forward_1 8) (Int64.shift_left forward_2 16)
+  in
+  let filtered_pawns =
+    Int64.logand (Int64.lognot forward_filter) filtered_pawns
+  in
+  list_join_iter
+    (bit_loop_iter filtered_pawns)
+    (bit_loop_iter
+       (if white_turn then Int64.shift_left filtered_pawns 16
+       else Int64.shift_right_logical filtered_pawns 16))
 
 (* Enumerates all forward pawn moves as long as square not blocked*)
 let _moves_pawn_forward (board_state : board_state) (white_turn : bool)
@@ -279,24 +250,47 @@ let moves_pawn_single (board_state : board_state) (white_turn : bool) :
   let filter = if white_turn then white_first_files else black_first_files in
   let forward_moves = _moves_pawn_forward board_state white_turn filter in
   let capture_moves = _moves_pawn_cap board_state white_turn filter in
-  let ep =
-    if board_state.ep = Int64.zero then []
-    else
-      let row = logarithm_iter board_state.ep / 8 in
-      let ones_row = Int64.shift_left black_last_file (row * 8) in
-      let ep_neighbors =
-        Int64.logor
-          (Int64.shift_left board_state.ep 1)
-          (Int64.shift_right_logical board_state.ep 1)
-      in
-      let ep_neighbors = Int64.logand ep_neighbors ones_row in
-      let ep_candidates =
-        if white_turn then Int64.logand ep_neighbors board_state.w_pawns
-        else Int64.logand ep_neighbors board_state.b_pawns
-      in
-      []
-  in
   List.append forward_moves capture_moves
+
+let moves_ep_captures (board_state : board_state) (white_turn : bool) :
+    (Int64.t * Int64.t) list =
+  if board_state.ep = Int64.zero then []
+  else
+    let row = logarithm_iter board_state.ep / 8 in
+    let ones_row = Int64.shift_left black_last_file (row * 8) in
+    let ep_neighbors =
+      Int64.logor
+        (Int64.shift_left board_state.ep 1)
+        (Int64.shift_right_logical board_state.ep 1)
+    in
+    let ep_neighbors = Int64.logand ep_neighbors ones_row in
+    let ep_candidates =
+      if white_turn then Int64.logand ep_neighbors board_state.w_pawns
+      else Int64.logand ep_neighbors board_state.b_pawns
+    in
+    let open_squares =
+      Int64.lognot (Int64.logor board_state.all_blacks board_state.all_whites)
+    in
+    let ep_filter_above =
+      if white_turn then
+        Int64.logand (Int64.shift_left board_state.ep 8) open_squares
+      else
+        Int64.logand (Int64.shift_right_logical board_state.ep 8) open_squares
+    in
+    let ep_candidate_filter =
+      if white_turn then
+        Int64.logor
+          (Int64.shift_right_logical ep_filter_above 7)
+          (Int64.shift_right_logical ep_filter_above 9)
+      else
+        Int64.logor
+          (Int64.shift_left ep_filter_above 7)
+          (Int64.shift_left ep_filter_above 9)
+    in
+    let ep_candidates = Int64.logand ep_candidate_filter ep_candidates in
+    list_join_iter
+      (bit_loop_iter ep_candidates)
+      (List.append [ ep_filter_above ] [ ep_filter_above ])
 
 let moves_pawn_attacks (board_state : board_state) (white_turn : bool) :
     (Int64.t * Int64.t) list =
@@ -712,6 +706,6 @@ let rec print_board board_state range =
 
       print_board board_state (range - 1)
 
-let move bs cmd = 
-  let move_set = all_legal_moves (pseudolegal_moves bs) in 
+let move bs cmd =
+  let move_set = all_legal_moves (pseudolegal_moves bs) in
   raise (Failure "Unimplemented")
