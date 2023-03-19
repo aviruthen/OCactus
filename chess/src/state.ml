@@ -706,6 +706,10 @@ let rec print_board board_state range =
 
       print_board board_state (range - 1)
 
-let move bs cmd =
-  let move_set = all_legal_moves (pseudolegal_moves bs) in
-  raise (Failure "Unimplemented")
+let move bs cmd = 
+  let move_set = all_legal_moves (pseudolegal_moves bs) in 
+  let (s,e) = process_square cmd in 
+  let (_,_,mb) = List.hd 
+    (List.filter (fun (a,b,_) -> (s,e) = (a,b)) move_set) in
+  mb
+
