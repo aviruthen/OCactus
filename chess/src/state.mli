@@ -73,9 +73,10 @@ val enemy_attacks : board_state -> Int64.t
     board_state.w_turn, then squares attacked by black, and vice versa); used
     for checking move and castling legality *)
 
-val process_square : _ -> Int64.t
-(** Obtains the square the user would like to move to from their input command
-    represented as an Int64.t that corresponds to the bitboard First argument
+val process_square : Command.t -> Int64.t * Int64.t
+(** Obtains the starting square the user would like to move from their input 
+    command and the ending square they would like to move to, represented as a 
+    (Int64.t, Int64.t) double that corresponds to two bit boards. First argument
     has type Command.t *)
 
 val process_piece : _ -> string

@@ -286,8 +286,22 @@ let enemy_attacks (board_state : board_state) : Int64.t =
 
 (* Obtains the square the user would like to move to from their input command
    represented as an Int64.t that corresponds to the bitboard cmd has type
-   Command.t *)
-let process_square cmd = raise (Failure "Unimplemented")
+   Command.t  -- we assume that the string input is of the form 
+   "starting_space ending_space", or e.g. "a4 a5"*)
+let process_square cmd = 
+  let raw_cmd = Command.get_command cmd in
+  let sq1_letter = String.get raw_cmd 0 in
+  let sq1_number = String.get raw_cmd 1 in
+  let sq2_letter = String.get raw_cmd (String.length raw_cmd - 2) 
+    |> Char.lowercase_ascii in
+  let sq2_number = (String.get raw_cmd (String.length raw_cmd - 1)) 
+    |> Char.lowercase_ascii in
+
+  (Int64.shift_left Int64.one (8*(Char.code sq1_letter - 97) + 
+  Char.code sq1_number - 49), 
+  Int64.shift_left Int64.one (8*(Char.code sq2_letter - 97) + 
+  Char.code sq2_number - 49))
+
 
 (* Obtains the piece that the user would like to move as a string. cmd has type
    Command.t *)
