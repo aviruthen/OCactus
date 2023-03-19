@@ -23,7 +23,6 @@ type board_state = {
   in_check_b : bool;
 }
 
-<<<<<<< Updated upstream
 let init_chess = {
    b_pawns = Int64.(logxor (shift_right_logical (minus_one) 8) (shift_right_logical (minus_one) 16));
    b_bishops = Int64.(shift_left (logor (shift_left (one) 2) (shift_left (one) 5)) 56);
@@ -48,7 +47,6 @@ let init_chess = {
    in_check_w = false;
    in_check_b = false;
 }
-=======
 let white_last_file =
   Int64.logxor
     (Int64.shift_right_logical Int64.minus_one 8)
@@ -66,7 +64,6 @@ let rec logarithm (num : Int64.t) (acc : int) : int =
   if num = Int64.one then acc else logarithm (Int64.shift_right_logical num 1) (acc + 1)
 
 let logarithm_iter (num : Int64.t) = logarithm num 0
->>>>>>> Stashed changes
 
 
 
@@ -518,7 +515,60 @@ let process_piece cmd = raise (Failure "Unimplemented")
    for command corresponding to legal move, then recurses on BoardState
    corresponding to chosen move *)
 let rec_func (board_state : board_state) = raise (Failure "Unimplemented")
-   game ending in this step if that is the case), queries and repeatedly waits
+   (** game ending in this step if that is the case), queries and repeatedly waits
    for command corresponding to legal move, then recurses on BoardState
    corresponding to chosen move *)
 let rec_func (board_state : board_state) = raise (Failure "Unimplemented")
+
+(** list_range 10 [] returns [0; 1; 2; 3; 4; 5; 6; 7; 8; 9] *)
+let rec list_range range lst =
+  if range = 0 then lst else list_range (range - 1) ([ range - 1 ] @ lst)
+
+let rec print_board board_state range =
+  let range_as_list = list_range range [] in
+  match List.rev range_as_list with
+  | [] -> Stdlib.print_string "\ndone!"
+  | h :: t ->
+      if Int64.logand (Int64.shift_right_logical board_state.b_pawns h) 1L = 1L
+      then Stdlib.print_string "P"
+      else Stdlib.print_string "";
+      if
+        Int64.logand (Int64.shift_right_logical board_state.b_bishops h) 1L = 1L
+      then Stdlib.print_string "B"
+      else Stdlib.print_string "";
+      if
+        Int64.logand (Int64.shift_right_logical board_state.b_knights h) 1L = 1L
+      then Stdlib.print_string "N"
+      else Stdlib.print_string "";
+      if Int64.logand (Int64.shift_right_logical board_state.b_rooks h) 1L = 1L
+      then Stdlib.print_string "R"
+      else Stdlib.print_string "";
+      if Int64.logand (Int64.shift_right_logical board_state.b_queen h) 1L = 1L
+      then Stdlib.print_string "Q"
+      else Stdlib.print_string "";
+      if Int64.logand (Int64.shift_right_logical board_state.b_king h) 1L = 1L
+      then Stdlib.print_string "K"
+      else Stdlib.print_string "";
+      if Int64.logand (Int64.shift_right_logical board_state.w_pawns h) 1L = 1L
+      then Stdlib.print_string "p"
+      else Stdlib.print_string "";
+      if
+        Int64.logand (Int64.shift_right_logical board_state.w_bishops h) 1L = 1L
+      then Stdlib.print_string "b"
+      else Stdlib.print_string "";
+      if
+        Int64.logand (Int64.shift_right_logical board_state.w_knights h) 1L = 1L
+      then Stdlib.print_string "n"
+      else Stdlib.print_string "";
+      if Int64.logand (Int64.shift_right_logical board_state.w_rooks h) 1L = 1L
+      then Stdlib.print_string "r"
+      else Stdlib.print_string "";
+      if Int64.logand (Int64.shift_right_logical board_state.w_queen h) 1L = 1L
+      then Stdlib.print_string "q"
+      else Stdlib.print_string "";
+      if Int64.logand (Int64.shift_right_logical board_state.w_king h) 1L = 1L
+      then Stdlib.print_string "k"
+      else Stdlib.print_string "";
+      if h mod 8 = 0 then Stdlib.print_string "\n" else Stdlib.print_string "";
+
+      print_board board_state (range - 1)
