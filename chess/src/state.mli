@@ -91,4 +91,6 @@ val rec_func : board_state -> unit
 
 val print_board : board_state -> int -> unit
 (** print chess board*)
-(** print chess board*)
+val move : board_state -> Command.t -> board_state
+(** if move is in the valid list then do so (eat other piece if necessary) ...
+    if checkmate then finish *)
