@@ -68,9 +68,7 @@ let rec logarithm (num : Int64.t) (acc : int) : int =
 let logarithm_iter (num : Int64.t) = logarithm num 0
 >>>>>>> Stashed changes
 
-let pseudolegal_moves (board_state : board_state) :
-    (Int64.t * Int64.t * board_state) list =
-  raise (Failure "Unimplemented")
+
 
 let all_legal_moves (board_moves : (Int64.t * Int64.t * board_state) list) :
     (Int64.t * Int64.t * board_state) list =
@@ -316,6 +314,181 @@ let enemy_attacks (board_state : board_state) : Int64.t =
   queen_atk |> Int64.logor king_atk |> Int64.logor rook_atk
   |> Int64.logor bishop_atk |> Int64.logor knight_atk |> Int64.logor pawn_atk
   |> Int64.logor promote_atk
+
+
+
+  let piece_at_spot board_state (move : Int64.t) : string = 
+   if board_state.w_turn then 
+      if Int64.(logand move board_state.b_pawns <> zero) then "p" else
+      if Int64.(logand move board_state.b_bishops <> zero) then "b" else
+      if Int64.(logand move board_state.b_knights <> zero) then "n" else
+      if Int64.(logand move board_state.b_rooks <> zero) then "r" else "q"
+   else
+      if Int64.(logand move board_state.w_pawns <> zero) then "p" else
+         if Int64.(logand move board_state.w_bishops <> zero) then "b" else
+         if Int64.(logand move board_state.w_knights <> zero) then "n" else
+         if Int64.(logand move board_state.w_rooks <> zero) then "r" else "q" 
+
+let process_capture board_state new_move : board_state = 
+   if board_state.w_turn then 
+      match (piece_at_spot board_state new_move) with
+      | "q" -> {board_state with b_queen = Int64.zero}
+      | "r" -> {board_state with b_rooks = Int64.logxor new_move board_state.b_rooks}
+      | "n" -> {board_state with b_knights = Int64.logxor new_move board_state.b_knights}
+      | "b" -> {board_state with b_bishops = Int64.logxor new_move board_state.b_bishops}
+      | "p" -> {board_state with b_pawns = Int64.logxor new_move board_state.b_pawns}
+      | _ -> failwith "No Valid Capture Detected"
+   else 
+      match (piece_at_spot board_state new_move) with
+      | "q" -> {board_state with w_queen = Int64.zero}
+      | "r" -> {board_state with b_rooks = Int64.logxor new_move board_state.w_rooks}
+      | "n" -> {board_state with b_knights = Int64.logxor new_move board_state.w_knights}
+      | "b" -> {board_state with b_bishops = Int64.logxor new_move board_state.w_bishops}
+      | "p" -> {board_state with b_pawns = Int64.logxor new_move board_state.w_pawns}
+      | _ -> failwith "No Valid Capture Detected"
+
+let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) = 
+   match move with 
+   | (old_move, new_move) ->
+   match piece with
+   | "k" ->  
+      if board_state.w_turn then 
+         if Int64.(logand new_move board_state.all_blacks = zero) then 
+            (old_move, new_move, {board_state with w_king = new_move})
+         else 
+            let temp_board = process_capture board_state new_move in
+            (old_move, new_move, {temp_board with w_king = new_move})
+      else 
+         if Int64.(logand new_move board_state.all_whites = zero) then
+            (old_move, new_move, {board_state with b_king = new_move})
+         else 
+            let temp_board = process_capture board_state new_move in
+            (old_move, new_move, {temp_board with b_king = new_move})
+   | "q" ->  
+      if board_state.w_turn then 
+         if Int64.(logand new_move board_state.all_blacks = zero) then 
+            (old_move, new_move, {board_state with w_queen = board_state.w_queen
+            |> Int64.logxor old_move 
+            |> Int64.logor new_move})
+         else 
+            let temp_board = process_capture board_state new_move in
+            (old_move, new_move, {temp_board with w_queen = board_state.w_queen
+            |> Int64.logxor old_move 
+            |> Int64.logor new_move})
+      else 
+         if Int64.(logand new_move board_state.all_whites = zero) then
+            (old_move, new_move, {board_state with b_queen = board_state.b_queen
+            |> Int64.logxor old_move 
+            |> Int64.logor new_move})
+         else 
+            let temp_board = process_capture board_state new_move in
+            (old_move, new_move, {temp_board with b_queen = board_state.b_queen
+            |> Int64.logxor old_move 
+            |> Int64.logor new_move})
+   | "r" ->  
+      if board_state.w_turn then 
+         if Int64.(logand new_move board_state.all_blacks = zero) then 
+            (old_move, new_move, {board_state with w_rooks = board_state.w_rooks
+            |> Int64.logxor old_move 
+            |> Int64.logor new_move})
+         else 
+            let temp_board = process_capture board_state new_move in
+            (old_move, new_move, {temp_board with w_rooks = board_state.w_rooks
+            |> Int64.logxor old_move 
+            |> Int64.logor new_move})
+      else 
+         if Int64.(logand new_move board_state.all_whites = zero) then
+            (old_move, new_move, {board_state with b_rooks = board_state.b_rooks
+            |> Int64.logxor old_move 
+            |> Int64.logor new_move})
+         else 
+            let temp_board = process_capture board_state new_move in
+            (old_move, new_move, {temp_board with b_rooks = board_state.b_rooks
+            |> Int64.logxor old_move 
+            |> Int64.logor new_move})
+   | "n" ->  
+      if board_state.w_turn then 
+         if Int64.(logand new_move board_state.all_blacks = zero) then 
+            (old_move, new_move, {board_state with w_knights = board_state.w_knights
+            |> Int64.logxor old_move 
+            |> Int64.logor new_move})
+         else 
+            let temp_board = process_capture board_state new_move in
+            (old_move, new_move, {temp_board with w_knights = board_state.w_knights
+            |> Int64.logxor old_move 
+            |> Int64.logor new_move})
+      else 
+         if Int64.(logand new_move board_state.all_whites = zero) then
+            (old_move, new_move, {board_state with b_knights = board_state.b_knights
+            |> Int64.logxor old_move 
+            |> Int64.logor new_move})
+         else 
+            let temp_board = process_capture board_state new_move in
+            (old_move, new_move, {temp_board with b_knights = board_state.b_knights
+            |> Int64.logxor old_move 
+            |> Int64.logor new_move})
+   | "b" ->  
+      if board_state.w_turn then 
+         if Int64.(logand new_move board_state.all_blacks = zero) then 
+            (old_move, new_move, {board_state with w_bishops = board_state.w_bishops
+            |> Int64.logxor old_move 
+            |> Int64.logor new_move})
+         else 
+            let temp_board = process_capture board_state new_move in
+            (old_move, new_move, {temp_board with w_bishops = board_state.w_bishops
+            |> Int64.logxor old_move 
+            |> Int64.logor new_move})
+      else 
+         if Int64.(logand new_move board_state.all_whites = zero) then
+            (old_move, new_move, {board_state with b_bishops = board_state.b_bishops
+            |> Int64.logxor old_move 
+            |> Int64.logor new_move})
+         else 
+            let temp_board = process_capture board_state new_move in
+            (old_move, new_move, {temp_board with b_bishops = board_state.b_bishops
+            |> Int64.logxor old_move 
+            |> Int64.logor new_move})   
+
+   | "p" ->  
+      if board_state.w_turn then 
+         if Int64.(logand new_move board_state.all_blacks = zero) then 
+            (old_move, new_move, {board_state with w_pawns = board_state.w_pawns
+            |> Int64.logxor old_move 
+            |> Int64.logor new_move})
+         else 
+            let temp_board = process_capture board_state new_move in
+            (old_move, new_move, {temp_board with w_pawns = board_state.w_pawns
+            |> Int64.logxor old_move 
+            |> Int64.logor new_move})
+      else 
+         if Int64.(logand new_move board_state.all_whites = zero) then
+            (old_move, new_move, {board_state with b_knights = board_state.b_pawns
+            |> Int64.logxor old_move 
+            |> Int64.logor new_move})
+         else 
+            let temp_board = process_capture board_state new_move in
+            (old_move, new_move, {temp_board with b_knights = board_state.b_pawns
+            |> Int64.logxor old_move 
+            |> Int64.logor new_move})
+   | _ -> failwith "Piece Not Recognized"
+
+let pseudolegal_moves (board_state : board_state) :
+   (Int64.t * Int64.t * board_state) list = 
+   (List.map (fun move -> move_piece_board board_state move "k") 
+             (moves_king board_state board_state.w_turn)) @
+   (List.map (fun move -> move_piece_board board_state move "q") 
+             (moves_queen board_state board_state.w_turn)) @
+   (List.map (fun move -> move_piece_board board_state move "r") 
+             (moves_rook board_state board_state.w_turn)) @
+   (List.map (fun move -> move_piece_board board_state move "k") 
+             (moves_knight board_state board_state.w_turn)) @
+   (List.map (fun move -> move_piece_board board_state move "b") 
+             (moves_bishop board_state board_state.w_turn)) @
+   (List.map (fun move -> move_piece_board board_state move "p") 
+             (moves_pawn_single board_state board_state.w_turn)) @
+   (List.map (fun move -> move_piece_board board_state move "p") 
+             (moves_pawn_double board_state board_state.w_turn)) 
+
 
 (* Obtains the square the user would like to move to from their input command
    represented as an Int64.t that corresponds to the bitboard cmd has type
