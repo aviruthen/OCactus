@@ -74,8 +74,8 @@ val enemy_attacks : board_state -> Int64.t
     for checking move and castling legality *)
 
 val process_square : Command.t -> Int64.t * Int64.t
-(** Obtains the starting square the user would like to move from their input 
-    command and the ending square they would like to move to, represented as a 
+(** Obtains the starting square the user would like to move from their input
+    command and the ending square they would like to move to, represented as a
     (Int64.t, Int64.t) double that corresponds to two bit boards. First argument
     has type Command.t *)
 
@@ -88,3 +88,6 @@ val rec_func : board_state -> unit
     game ending in this step if that is the case), queries and repeatedly waits
     for command corresponding to legal move, then recurses on BoardState
     corresponding to chosen move *)
+
+val print_board : board_state -> int -> unit
+(** print chess board*)
