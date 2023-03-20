@@ -37,7 +37,11 @@ let init_chess =
     b_rooks = Int64.(shift_left (logor one (shift_left one 7)) 56);
     b_queen = Int64.(shift_left one 60);
     b_king = Int64.(shift_left one 59);
-    w_pawns = 195840L;
+    w_pawns =
+      Int64.(
+        logxor
+          (shift_right_logical minus_one 48)
+          (shift_right_logical minus_one 56));
     w_bishops = Int64.(logor (shift_left one 2) (shift_left one 5));
     w_knights = Int64.(logor (shift_left one 1) (shift_left one 6));
     w_rooks = Int64.(logor one (shift_left one 7));
