@@ -802,3 +802,4 @@ let move bs cmd =
 (* let move bs cmd = let move_set = all_legal_moves (pseudolegal_moves bs) in
    let s, e = process_square cmd in let _, _, mb = List.hd (List.filter (fun (a,
    b, _) -> (s, e) = (a, b)) move_set) in mb *)
+let get_val board_state = board_state.w_pawns
