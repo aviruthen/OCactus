@@ -711,9 +711,9 @@ let process_square cmd =
   in
 
   ( Int64.shift_left Int64.one
-      ((8 * (Char.code sq1_letter - 97)) + Char.code sq1_number - 49),
+      ((8 * (Char.code sq1_number - 49)) + Char.code sq1_letter - 97),
     Int64.shift_left Int64.one
-      ((8 * (Char.code sq2_letter - 97)) + Char.code sq2_number - 49) )
+      ((8 * (Char.code sq2_number - 49)) + Char.code sq2_letter - 97) )
 
 (* Obtains the piece that the user would like to move as a string. cmd has type
    Command.t *)
@@ -798,6 +798,7 @@ let move bs cmd =
   let move_set = all_legal_moves (pseudolegal_moves_working bs) in
   let s, e = process_square cmd in
   let _ = print_string (Int64.to_string s ^ " " ^ Int64.to_string e ^ "\n") in
+  let _ = print_moves move_set in
   let valid_move_list =
     List.filter (fun (a, b, _) -> s = a && e = b) move_set
   in
@@ -806,10 +807,10 @@ let move bs cmd =
     let _, _, next_board = List.hd valid_move_list in
     next_board
 
-let move bs cmd =
+(* let move bs cmd =
   let move_set = all_legal_moves (pseudolegal_moves bs) in
   let s, e = process_square cmd in
   let _, _, mb =
     List.hd (List.filter (fun (a, b, _) -> (s, e) = (a, b)) move_set)
   in
-  mb
+  mb *)
