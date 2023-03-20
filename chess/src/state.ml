@@ -120,22 +120,20 @@ let mirror_horizontal (num : Int64.t) : Int64.t =
 let rec pawn_lookup_builder_white (mask_map : (Int64.t * Int64.t) list)
     (counts : int) =
   if counts > 63 then mask_map
+  else if counts mod 8 = 0 then
+    pawn_lookup_builder_white
+      (( Int64.shift_left Int64.one counts,
+         Int64.shift_left Int64.one (counts + 9) )
+      :: mask_map)
+      (counts + 7)
   else
-    let row = counts / 8 in
-    if counts mod 8 = 1 then
-      pawn_lookup_builder_white
-        (( Int64.shift_left Int64.one (row * 8),
-           Int64.shift_left Int64.one ((row * 8) + 9) )
-        :: mask_map)
-        (counts + 7)
-    else
-      pawn_lookup_builder_white
-        (( Int64.shift_left Int64.one (row * 8),
-           Int64.shift_left Int64.one ((row * 8) + 7) )
-        :: mask_map)
-        (counts + 1)
+    pawn_lookup_builder_white
+      (( Int64.shift_left Int64.one counts,
+         Int64.shift_left Int64.one (counts + 7) )
+      :: mask_map)
+      (counts + 1)
 
-let pawn_lookup_white = pawn_lookup_builder_white [] 1
+let pawn_lookup_white = pawn_lookup_builder_white [] 8
 
 let pawn_lookup_black =
   List.map
@@ -275,47 +273,45 @@ let _moves_pawn_diagonal (board_state : board_state) (white_turn : bool)
     if white_turn then Int64.logand filter board_state.w_pawns
     else Int64.logand filter board_state.b_pawns
   in
+  let edge_filtered = Int64.logand edge_mask filtered in
+  let edge_pieces = bit_loop_iter edge_filtered in
+  let lookup_list =
+    if white_turn then pawn_lookup_white else pawn_lookup_black
+  in
+  let edge_moves =
+    list_join_iter edge_pieces
+      (List.map
+         (fun bitmap ->
+           snd (List.find (fun tup -> fst tup = bitmap) lookup_list))
+         edge_pieces)
+  in
+  let central_filtered = Int64.logand center_mask filtered in
   let new_positions_left =
-    if white_turn then Int64.shift_left filtered 9
-    else Int64.shift_right_logical filtered 9
+    if white_turn then Int64.shift_left central_filtered 9
+    else Int64.shift_right_logical central_filtered 9
   in
   let new_positions_right =
-    if white_turn then Int64.shift_left filtered 7
-    else Int64.shift_right_logical filtered 7
+    if white_turn then Int64.shift_left central_filtered 7
+    else Int64.shift_right_logical central_filtered 7
   in
-  let original_positions =
-    bit_loop_iter (if white_turn then filtered else filtered)
+  let central_list = bit_loop_iter central_filtered in
+  let center_moves =
+    List.append
+      (list_join_iter central_list (bit_loop_iter new_positions_left))
+      (list_join_iter central_list (bit_loop_iter new_positions_right))
   in
-  List.append
-    (list_join_iter original_positions (bit_loop_iter new_positions_left))
-    (list_join_iter original_positions (bit_loop_iter new_positions_right))
+  List.append edge_moves center_moves
 
 (* filters pawns and finds all pseudolegal captures *)
 let _moves_pawn_cap (board_state : board_state) (white_turn : bool)
     (filter : Int64.t) : (Int64.t * Int64.t) list =
-  let filtered_pawns =
-    if white_turn then Int64.logand filter board_state.w_pawns
-    else Int64.logand filter board_state.b_pawns
+  let diagonal_moves = _moves_pawn_diagonal board_state white_turn filter in
+  let valid_cap_filter =
+    if white_turn then board_state.all_blacks else board_state.all_whites
   in
-  let occupied = Int64.logor board_state.all_blacks board_state.all_whites in
-  let can_atk_left =
-    if white_turn then Int64.logand occupied (Int64.shift_left filtered_pawns 9)
-    else Int64.logand occupied (Int64.shift_right_logical filtered_pawns 9)
-  in
-  let can_atk_right =
-    if white_turn then Int64.logand occupied (Int64.shift_left filtered_pawns 7)
-    else Int64.logand occupied (Int64.shift_right_logical filtered_pawns 7)
-  in
-  let original_atk_left =
-    if white_turn then Int64.shift_right_logical can_atk_left 9
-    else Int64.shift_left can_atk_left 9
-  in
-  let original_atk_right =
-    if white_turn then Int64.shift_right_logical can_atk_right 7
-    else Int64.shift_left can_atk_right 7
-  in
-  let filter = Int64.logor original_atk_left original_atk_right in
-  _moves_pawn_diagonal board_state white_turn filter
+  List.filter
+    (fun tup -> Int64.logand valid_cap_filter (snd tup) <> Int64.zero)
+    diagonal_moves
 
 let moves_pawn_single (board_state : board_state) (white_turn : bool) :
     (Int64.t * Int64.t) list =
@@ -711,9 +707,9 @@ let process_square cmd =
   in
 
   ( Int64.shift_left Int64.one
-      ((8 * (Char.code sq1_letter - 97)) + Char.code sq1_number - 49),
+      ((8 * (Char.code sq1_number - 49)) + Char.code sq1_letter - 97),
     Int64.shift_left Int64.one
-      ((8 * (Char.code sq2_letter - 97)) + Char.code sq2_number - 49) )
+      ((8 * (Char.code sq2_number - 49)) + Char.code sq2_letter - 97) )
 
 (* Obtains the piece that the user would like to move as a string. cmd has type
    Command.t *)
@@ -798,6 +794,7 @@ let move bs cmd =
   let move_set = all_legal_moves (pseudolegal_moves_working bs) in
   let s, e = process_square cmd in
   let _ = print_string (Int64.to_string s ^ " " ^ Int64.to_string e ^ "\n") in
+  let _ = print_moves move_set in
   let valid_move_list =
     List.filter (fun (a, b, _) -> s = a && e = b) move_set
   in
@@ -806,10 +803,6 @@ let move bs cmd =
     let _, _, next_board = List.hd valid_move_list in
     next_board
 
-let move bs cmd =
-  let move_set = all_legal_moves (pseudolegal_moves bs) in
-  let s, e = process_square cmd in
-  let _, _, mb =
-    List.hd (List.filter (fun (a, b, _) -> (s, e) = (a, b)) move_set)
-  in
-  mb
+(* let move bs cmd = let move_set = all_legal_moves (pseudolegal_moves bs) in
+   let s, e = process_square cmd in let _, _, mb = List.hd (List.filter (fun (a,
+   b, _) -> (s, e) = (a, b)) move_set) in mb *)
