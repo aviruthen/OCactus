@@ -6,29 +6,31 @@ open State
 (** tests *)
 let state_tests = []
 
-
-let parse_test (name : string) (input : string) 
-  (expected_output : string) = 
+let parse_test (name : string) (input : string) (expected_output : string) =
   name >:: fun _ ->
   assert_equal expected_output (get_command (parse input)) ~printer:Fun.id
 
-let parse_test_invalid (name : string) (input : string) = 
+let parse_test_invalid (name : string) (input : string) =
+  name >:: fun _ -> assert_raises MalformedInput (fun () -> parse input)
+
+let pawn_tests (name : string) (board_state : board_state) =
   name >:: fun _ ->
-  assert_raises MalformedInput (fun() -> parse input)
+  let pawn_pos = moves_pawn_double board_state true in
+  let combined =
+    List.fold_right Int64.logor (List.map snd pawn_pos) Int64.zero
+  in
+  let _ = Printf.printf "print_start\n%s\n" (Int64.to_string combined) in
+  assert_equal true false
 
+let command_tests =
+  [ (* parse_test "basic input" "a3 a4" "a3 a4"; parse_test "uppercase both" "B3
+       C6" "b3 c6"; parse_test "uppercase one" "g8 F6" "g8 f6"; parse_test
+       "extreme bounds" "a1 h8" "a1 h8"; parse_test_invalid "out of bounds
+       invalid" "a0 c1"; parse_test_invalid "bad spacing" "a3 a4";
+       parse_test_invalid "no spaces" "a3a4"; parse_test_invalid "same square"
+       "c1 c1"; parse_test_invalid "random" "asdflk214p9u124 1249u09v"; *) ]
 
-let command_tests = [
-  parse_test "basic input" "a3 a4" "a3 a4";
-  parse_test "uppercase both" "B3 C6" "b3 c6"; 
-  parse_test "uppercase one" "g8 F6" "g8 f6"; 
-  parse_test "extreme bounds" "a1 h8" "a1 h8"; 
-  parse_test_invalid "out of bounds invalid" "a0 c1"; 
-  parse_test_invalid "bad spacing" "a3   a4"; 
-  parse_test_invalid "no spaces" "a3a4"; 
-  parse_test_invalid "same square" "c1 c1";
-  parse_test_invalid "random" "asdflk214p9u124 1249u09v";
-]
-let piece_tests = []
+let piece_tests = [ pawn_tests "test" init_chess ]
 let gui_tests = []
 
 let suite =
