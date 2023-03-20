@@ -120,22 +120,20 @@ let mirror_horizontal (num : Int64.t) : Int64.t =
 let rec pawn_lookup_builder_white (mask_map : (Int64.t * Int64.t) list)
     (counts : int) =
   if counts > 63 then mask_map
+  else if counts mod 8 = 0 then
+    pawn_lookup_builder_white
+      (( Int64.shift_left Int64.one counts,
+         Int64.shift_left Int64.one (counts + 9) )
+      :: mask_map)
+      (counts + 7)
   else
-    let row = counts / 8 in
-    if counts mod 8 = 1 then
-      pawn_lookup_builder_white
-        (( Int64.shift_left Int64.one (row * 8),
-           Int64.shift_left Int64.one ((row * 8) + 9) )
-        :: mask_map)
-        (counts + 7)
-    else
-      pawn_lookup_builder_white
-        (( Int64.shift_left Int64.one (row * 8),
-           Int64.shift_left Int64.one ((row * 8) + 7) )
-        :: mask_map)
-        (counts + 1)
+    pawn_lookup_builder_white
+      (( Int64.shift_left Int64.one counts,
+         Int64.shift_left Int64.one (counts + 7) )
+      :: mask_map)
+      (counts + 1)
 
-let pawn_lookup_white = pawn_lookup_builder_white [] 1
+let pawn_lookup_white = pawn_lookup_builder_white [] 8
 
 let pawn_lookup_black =
   List.map

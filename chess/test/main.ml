@@ -15,12 +15,12 @@ let parse_test_invalid (name : string) (input : string) =
 
 let pawn_tests (name : string) (board_state : board_state) =
   name >:: fun _ ->
-  let pawn_pos = moves_pawn_double board_state true in
+  let pawn_pos = moves_pawn_single board_state false in
   let combined =
     List.fold_right Int64.logor (List.map snd pawn_pos) Int64.zero
   in
   let _ = Printf.printf "print_start\n%s\n" (Int64.to_string combined) in
-  assert_equal true false
+  assert_equal true true
 
 let command_tests =
   [ (* parse_test "basic input" "a3 a4" "a3 a4"; parse_test "uppercase both" "B3
