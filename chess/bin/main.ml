@@ -15,16 +15,16 @@ let rec move_game mv bs =
       State.print_board nbs 64;
     if nbs = bs then 
         (Stdlib.print_string "Enter valid move: "; 
-        move_game (read_line ()) bs)
+        move_game (String.trim (read_line ())) bs)
         else
           (Stdlib.print_string ">"; 
-          move_game (read_line ()) nbs)
+          move_game (String.trim (read_line ())) nbs)
 
 let play_game =
   Stdlib.print_string "\n\n";
   State.print_board State.init_chess 64;
   Stdlib.print_string "Enter move: ";
-  match read_line () with
+  match String.trim (read_line ()) with
   | exception End_of_file -> ()
   | m -> State.print_board (move_game m State.init_chess) 64;
 
