@@ -28,11 +28,18 @@ let command_tests = [
   parse_test_invalid "same square" "c1 c1";
   parse_test_invalid "random" "asdflk214p9u124 1249u09v";
 ]
-let piece_tests = []
+
+let rec board_printer board_list = match board_list with
+| [] -> ()
+| (_,_,b) :: t -> let _ = print_board b 64 in board_printer t
+
+let _ = print_endline "TEST PAWNS"
+let _ = board_printer (pseudolegal_moves (init_chess))
+let state_tests = []
 let gui_tests = []
 
 let suite =
   "test suite for A2"
-  >::: List.flatten [ state_tests; command_tests; piece_tests; gui_tests ]
+  >::: List.flatten [ state_tests; command_tests; state_tests; gui_tests ]
 
 let _ = run_test_tt_main suite
