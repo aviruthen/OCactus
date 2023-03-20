@@ -651,7 +651,7 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
               new_move,
               {
                 board_state with
-                b_knights =
+                b_pawns =
                   board_state.b_pawns |> Int64.logxor old_move
                   |> Int64.logor new_move;
               } )
@@ -661,7 +661,7 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
               new_move,
               {
                 temp_board with
-                b_knights =
+                b_pawns =
                   board_state.b_pawns |> Int64.logxor old_move
                   |> Int64.logor new_move;
               } )
@@ -689,7 +689,8 @@ let pseudolegal_moves (board_state : board_state) :
       (moves_pawn_single board_state board_state.w_turn)
   @ List.map
       (fun move -> move_piece_board board_state move "p")
-      (moves_pawn_double board_state board_state.w_turn)
+      (moves_pawn_double board_state board_state.w_turn) 
+   |> List.map(fun (a,b,c) -> (a,b, {c with w_turn = not c.w_turn}))
 
 (* Obtains the square the user would like to move to from their input command
    represented as an Int64.t that corresponds to the bitboard cmd has type
@@ -779,6 +780,7 @@ let pseudolegal_moves_pawns (board_state : board_state) :
   @ List.map
       (fun move -> move_piece_board board_state move "p")
       (moves_pawn_double board_state board_state.w_turn)
+   |> List.map(fun (a,b,c) -> (a,b, {c with w_turn = not c.w_turn}))
 
 let rec print_moves = function
   | [] -> ()
@@ -802,4 +804,4 @@ let move bs cmd =
 (* let move bs cmd = let move_set = all_legal_moves (pseudolegal_moves bs) in
    let s, e = process_square cmd in let _, _, mb = List.hd (List.filter (fun (a,
    b, _) -> (s, e) = (a, b)) move_set) in mb *)
-let get_val board_state = board_state.w_pawns
+let get_val board_state = board_state.b_knights
