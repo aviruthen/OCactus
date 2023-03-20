@@ -59,18 +59,90 @@ let init_chess =
     in_check_b = false;
   }
 
-let white_last_file =
-  Int64.logxor
-    (Int64.shift_right_logical Int64.minus_one 8)
-    (Int64.shift_right_logical Int64.minus_one 16)
-
-let black_last_file =
-  Int64.logxor
-    (Int64.shift_left Int64.minus_one 8)
-    (Int64.shift_left Int64.minus_one 16)
-
 let white_first_files = Int64.shift_right_logical Int64.minus_one 8
 let black_first_files = Int64.shift_left Int64.minus_one 8
+let white_last_file = Int64.logxor white_first_files Int64.minus_one
+let black_last_file = Int64.logxor black_first_files Int64.minus_one
+
+let rec pad prior mask counts =
+  if counts = 8 then mask
+  else pad (Int64.shift_left prior 8) (Int64.logor mask prior) (counts + 1)
+
+let edge_mask =
+  let left_side = pad Int64.one Int64.zero 0 in
+  let right_side = pad (Int64.shift_left Int64.one 7) Int64.zero 0 in
+  Int64.logor left_side right_side
+
+let center_mask = Int64.logxor Int64.minus_one edge_mask
+
+(* credits to
+   https://www.chessprogramming.org/Flipping_Mirroring_and_Rotating *)
+let flip_vertical (num : Int64.t) : Int64.t =
+  let const_1 = Int64.of_int 71777214294589695 in
+  let const_2 = Int64.of_int 281470681808895 in
+  let num =
+    Int64.(
+      logor
+        (logand (shift_right_logical num 8) const_1)
+        (shift_left (logand num const_1) 8))
+  in
+  let num =
+    Int64.(
+      logor
+        (logand (shift_right_logical num 16) const_2)
+        (shift_left (logand num const_2) 16))
+  in
+  Int64.(logor (shift_right_logical num 32) (shift_left num 32))
+
+(* credits to
+   https://www.chessprogramming.org/Flipping_Mirroring_and_Rotating *)
+let mirror_horizontal (num : Int64.t) : Int64.t =
+  let const_1 = Int64.of_string "0x5555555555555555" in
+  let const_2 = Int64.of_string "0x3333333333333333" in
+  let const_3 = Int64.of_string "0x0f0f0f0f0f0f0f0f" in
+  let num =
+    Int64.(
+      logor
+        (logand (shift_right_logical num 1) const_1)
+        (shift_left (logand num const_1) 1))
+  in
+  let num =
+    Int64.(
+      logor
+        (logand (shift_right_logical num 2) const_2)
+        (shift_left (logand num const_2) 2))
+  in
+  Int64.(
+    logor
+      (logand (shift_right_logical num 4) const_3)
+      (shift_left (logand num const_3) 4))
+
+let rec pawn_lookup_builder_white (mask_map : (Int64.t * Int64.t) list)
+    (counts : int) =
+  if counts > 63 then mask_map
+  else
+    let row = counts / 8 in
+    if counts mod 8 = 1 then
+      pawn_lookup_builder_white
+        (( Int64.shift_left Int64.one (row * 8),
+           Int64.shift_left Int64.one ((row * 8) + 9) )
+        :: mask_map)
+        (counts + 7)
+    else
+      pawn_lookup_builder_white
+        (( Int64.shift_left Int64.one (row * 8),
+           Int64.shift_left Int64.one ((row * 8) + 7) )
+        :: mask_map)
+        (counts + 1)
+
+let pawn_lookup_white = pawn_lookup_builder_white [] 1
+
+let pawn_lookup_black =
+  List.map
+    (fun tup ->
+      ( mirror_horizontal (flip_vertical (fst tup)),
+        mirror_horizontal (flip_vertical (snd tup)) ))
+    pawn_lookup_white
 
 let rec logarithm (num : Int64.t) (acc : int) : int =
   if num = Int64.one then acc
@@ -93,7 +165,7 @@ let rec bit_loop (bitmap : Int64.t) (acc_maps : Int64.t list) (acc_count : int)
   else
     bit_loop
       (Int64.shift_right_logical bitmap 1)
-      (Int64.shift_right_logical Int64.one acc_count :: acc_maps)
+      (Int64.shift_left Int64.one acc_count :: acc_maps)
       (acc_count + 1)
 
 let bit_loop_iter (bitmap : Int64.t) : Int64.t list = bit_loop bitmap [] 0
@@ -204,12 +276,12 @@ let _moves_pawn_diagonal (board_state : board_state) (white_turn : bool)
     else Int64.logand filter board_state.b_pawns
   in
   let new_positions_left =
-    if white_turn then Int64.shift_left filtered 7
-    else Int64.shift_right_logical filtered 7
-  in
-  let new_positions_right =
     if white_turn then Int64.shift_left filtered 9
     else Int64.shift_right_logical filtered 9
+  in
+  let new_positions_right =
+    if white_turn then Int64.shift_left filtered 7
+    else Int64.shift_right_logical filtered 7
   in
   let original_positions =
     bit_loop_iter (if white_turn then filtered else filtered)
@@ -707,29 +779,37 @@ let rec print_board board_state range =
 
       print_board board_state (range - 1)
 
-
-
-
 let pseudolegal_moves_working (board_state : board_state) :
     (Int64.t * Int64.t * board_state) list =
   List.map
-      (fun move -> move_piece_board board_state move "p")
-      (moves_pawn_single board_state board_state.w_turn)
+    (fun move -> move_piece_board board_state move "p")
+    (moves_pawn_single board_state board_state.w_turn)
   @ List.map
       (fun move -> move_piece_board board_state move "p")
-        (moves_pawn_double board_state board_state.w_turn)
-      
+      (moves_pawn_double board_state board_state.w_turn)
+
 let rec print_moves = function
-| [] -> ()
-| (a,b,c) :: t -> print_string 
-  ((Int64.to_string a) ^ " " ^ (Int64.to_string b) ^ "\n"); 
-  print_moves t
+  | [] -> ()
+  | (a, b, c) :: t ->
+      print_string (Int64.to_string a ^ " " ^ Int64.to_string b ^ "\n");
+      print_moves t
 
-let move bs cmd = 
-  let move_set = all_legal_moves (pseudolegal_moves_working bs) in 
-  let (s,e) = process_square cmd in 
-  let _ = print_string ((Int64.to_string s) ^ " " ^ (Int64.to_string e) ^ "\n") in
-  let valid_move_list = List.filter (fun (a,b,_) -> s = a && e = b) move_set in 
-  if List.length valid_move_list < 1 then bs else 
-    let (_,_,next_board) = List.hd valid_move_list in next_board
+let move bs cmd =
+  let move_set = all_legal_moves (pseudolegal_moves_working bs) in
+  let s, e = process_square cmd in
+  let _ = print_string (Int64.to_string s ^ " " ^ Int64.to_string e ^ "\n") in
+  let valid_move_list =
+    List.filter (fun (a, b, _) -> s = a && e = b) move_set
+  in
+  if List.length valid_move_list < 1 then bs
+  else
+    let _, _, next_board = List.hd valid_move_list in
+    next_board
 
+let move bs cmd =
+  let move_set = all_legal_moves (pseudolegal_moves bs) in
+  let s, e = process_square cmd in
+  let _, _, mb =
+    List.hd (List.filter (fun (a, b, _) -> (s, e) = (a, b)) move_set)
+  in
+  mb
