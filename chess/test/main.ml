@@ -30,11 +30,32 @@ let command_tests =
        parse_test_invalid "no spaces" "a3a4"; parse_test_invalid "same square"
        "c1 c1"; parse_test_invalid "random" "asdflk214p9u124 1249u09v"; *) ]
 
+let command_tests = [
+  parse_test "basic input" "a3 a4" "a3 a4";
+  parse_test "uppercase both" "B3 C6" "b3 c6"; 
+  parse_test "uppercase one" "g8 F6" "g8 f6"; 
+  parse_test "extreme bounds" "a1 h8" "a1 h8"; 
+  parse_test_invalid "out of bounds invalid" "a0 c1"; 
+  parse_test_invalid "bad spacing" "a3   a4"; 
+  parse_test_invalid "no spaces" "a3a4"; 
+  parse_test_invalid "same square" "c1 c1";
+  parse_test_invalid "random" "asdflk214p9u124 1249u09v";
+]
+
+let rec board_printer board_list = match board_list with
+| [] -> ()
+| (_,_,b) :: t -> let _ = print_board b 64 in 
+print_endline (Int64.to_string (get_val b));
+board_printer t
+
+let _ = print_endline "TEST PAWNS"
+let _ = board_printer(pseudolegal_moves_working (init_chess))
+let state_tests = []
 let piece_tests = [ pawn_tests "test" init_chess ]
 let gui_tests = []
 
 let suite =
   "test suite for A2"
-  >::: List.flatten [ state_tests; command_tests; piece_tests; gui_tests ]
+  >::: List.flatten [ state_tests; command_tests; state_tests; gui_tests ]
 
 let _ = run_test_tt_main suite
