@@ -1,0 +1,25 @@
+---
+group:
+  - name: Wayne Chen
+    netid: zc272
+  - name: Kevin Cui
+    netid: kc734
+  - name: Avi Ruthen
+    netid: apr67
+  - name: Dean Zhang
+    netid: dyz4
+pm:
+  name: Zhiyuan Chen
+  netid: zc333
+publish: true
+# Pithy title
+title: "OCact-Chess"
+git-repo: "https://github.com/aviruthen/OCactus"
+demo-video-url: ""
+# Write a short, attention-grabbing description of your project.
+desc: >
+  Our project is a graphical user interface for chess. It supports 
+  all the standard rules of chess including en-passant, castling, and pawn
+  promotion. The interface is click and click (or optionally based on user 
+  input with traditional chess notation), and the GUI is designed to both be 
+  aesthetically pleasing and smooth running.
