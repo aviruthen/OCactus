@@ -44,10 +44,12 @@ let command_tests = [
 
 let rec board_printer board_list = match board_list with
 | [] -> ()
-| (_,_,b) :: t -> let _ = print_board b 64 in board_printer t
+| (_,_,b) :: t -> let _ = print_board b 64 in 
+print_endline (Int64.to_string (get_val b));
+board_printer t
 
 let _ = print_endline "TEST PAWNS"
-let _ = board_printer (pseudolegal_moves (init_chess))
+let _ = board_printer(pseudolegal_moves_working (init_chess))
 let state_tests = []
 let piece_tests = [ pawn_tests "test" init_chess ]
 let gui_tests = []
