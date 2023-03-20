@@ -733,45 +733,41 @@ let rec print_board board_state range =
   | h :: t ->
       if Int64.logand (Int64.shift_right_logical board_state.b_pawns h) 1L = 1L
       then Stdlib.print_string "P"
-      else Stdlib.print_string "";
-      if
+      else if
         Int64.logand (Int64.shift_right_logical board_state.b_bishops h) 1L = 1L
       then Stdlib.print_string "B"
-      else Stdlib.print_string "";
-      if
+      else if
         Int64.logand (Int64.shift_right_logical board_state.b_knights h) 1L = 1L
       then Stdlib.print_string "N"
-      else Stdlib.print_string "";
-      if Int64.logand (Int64.shift_right_logical board_state.b_rooks h) 1L = 1L
+      else if
+        Int64.logand (Int64.shift_right_logical board_state.b_rooks h) 1L = 1L
       then Stdlib.print_string "R"
-      else Stdlib.print_string "";
-      if Int64.logand (Int64.shift_right_logical board_state.b_queen h) 1L = 1L
+      else if
+        Int64.logand (Int64.shift_right_logical board_state.b_queen h) 1L = 1L
       then Stdlib.print_string "Q"
-      else Stdlib.print_string "";
-      if Int64.logand (Int64.shift_right_logical board_state.b_king h) 1L = 1L
+      else if
+        Int64.logand (Int64.shift_right_logical board_state.b_king h) 1L = 1L
       then Stdlib.print_string "K"
-      else Stdlib.print_string "";
-      if Int64.logand (Int64.shift_right_logical board_state.w_pawns h) 1L = 1L
+      else if
+        Int64.logand (Int64.shift_right_logical board_state.w_pawns h) 1L = 1L
       then Stdlib.print_string "p"
-      else Stdlib.print_string "";
-      if
+      else if
         Int64.logand (Int64.shift_right_logical board_state.w_bishops h) 1L = 1L
       then Stdlib.print_string "b"
-      else Stdlib.print_string "";
-      if
+      else if
         Int64.logand (Int64.shift_right_logical board_state.w_knights h) 1L = 1L
       then Stdlib.print_string "n"
-      else Stdlib.print_string "";
-      if Int64.logand (Int64.shift_right_logical board_state.w_rooks h) 1L = 1L
+      else if
+        Int64.logand (Int64.shift_right_logical board_state.w_rooks h) 1L = 1L
       then Stdlib.print_string "r"
-      else Stdlib.print_string "";
-      if Int64.logand (Int64.shift_right_logical board_state.w_queen h) 1L = 1L
+      else if
+        Int64.logand (Int64.shift_right_logical board_state.w_queen h) 1L = 1L
       then Stdlib.print_string "q"
-      else Stdlib.print_string "";
-      if Int64.logand (Int64.shift_right_logical board_state.w_king h) 1L = 1L
+      else if
+        Int64.logand (Int64.shift_right_logical board_state.w_king h) 1L = 1L
       then Stdlib.print_string "k"
-      else Stdlib.print_string "";
-      if h mod 8 = 0 then Stdlib.print_string "\n" else Stdlib.print_string "";
+      else Stdlib.print_string ".";
+      if h mod 8 = 0 then Stdlib.print_string "\n" else Stdlib.print_string " ";
 
       print_board board_state (range - 1)
 
