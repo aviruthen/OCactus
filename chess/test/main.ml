@@ -51,8 +51,9 @@ board_printer t
 let _ = print_endline "TEST PAWNS"
 let _ = board_printer(pseudolegal_moves_pawns (init_chess))
 
-let new_board = move init_chess (parse "a2 a4")
-let _ = board_printer(pseudolegal_moves_pawns (new_board))
+let new_board = move init_chess (parse "e2 e4")
+let new_board1 = move new_board (parse "e7 e5")
+let _ = board_printer(pseudolegal_moves_pawns (new_board1))
 let state_tests = []
 let piece_tests = [ pawn_tests "test" init_chess ]
 let gui_tests = []
