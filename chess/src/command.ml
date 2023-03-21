@@ -3,6 +3,9 @@ type t = { command : string * string }
 exception MalformedInput
 
 let parse inp = 
+  if (inp |> String.lowercase_ascii |> String.trim) = "quit" 
+    then {command = ("quit", "game")}
+  else 
   let sq_list = String.split_on_char ' ' inp in
   if (List.length sq_list) <> 2 then raise MalformedInput else
     match sq_list with

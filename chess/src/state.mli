@@ -104,3 +104,7 @@ val print_board : board_state -> int -> unit
 val move : board_state -> Command.t -> board_state
 (** if move is in the valid list then do so (eat other piece if necessary) ...
     if checkmate then finish *)
+
+val get_turn : board_state -> string
+(** gets the current mover of the board ("white" for white's turn, 
+    "black" for black's turn)*)

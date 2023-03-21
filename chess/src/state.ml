@@ -857,3 +857,5 @@ let move bs cmd =
    let s, e = process_square cmd in let _, _, mb = List.hd (List.filter (fun (a,
    b, _) -> (s, e) = (a, b)) move_set) in mb *)
 let get_val board_state = board_state.b_knights
+
+let get_turn board_state = if board_state.w_turn then "white" else "black"
