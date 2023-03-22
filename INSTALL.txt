@@ -14,3 +14,9 @@ Finally, you can install ANSITerminal.
 command: opam install ANSITerminal
 
 That should be all the installations you will need!
+
+You will need to build the game by running
+command: dune build
+
+To run our game and play the UI, do
+command: make play
