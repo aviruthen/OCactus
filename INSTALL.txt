@@ -1,0 +1,16 @@
+Install Instructions:
+
+Our current version requires ANSITerminal
+
+Please update OPAM before installing:
+command: opam update
+
+This first command may take a while, but that is normal.
+Next, you may have to upgrade already-installed packages
+You can do so with the following command:
+command: opam upgrade
+
+Finally, you can install ANSITerminal.
+command: opam install ANSITerminal
+
+That should be all the installations you will need!
