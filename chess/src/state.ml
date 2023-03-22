@@ -456,24 +456,47 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
       | "k" ->
           if board_state.w_turn then
             if Int64.(logand new_move board_state.all_blacks = zero) then
-              (old_move, new_move, 
-              { board_state with w_king = new_move;
-              all_whites = board_state.all_whites |> Int64.logxor old_move
-              |> Int64.logor new_move})
+              ( old_move,
+                new_move,
+                {
+                  board_state with
+                  w_king = new_move;
+                  all_whites =
+                    board_state.all_whites |> Int64.logxor old_move
+                    |> Int64.logor new_move;
+                } )
             else
               let temp_board = process_capture board_state new_move in
-              (old_move, new_move, { temp_board with w_king = new_move;
-              all_whites = board_state.all_whites |> Int64.logxor old_move
-              |> Int64.logor new_move})
+              ( old_move,
+                new_move,
+                {
+                  temp_board with
+                  w_king = new_move;
+                  all_whites =
+                    board_state.all_whites |> Int64.logxor old_move
+                    |> Int64.logor new_move;
+                } )
           else if Int64.(logand new_move board_state.all_whites = zero) then
-            (old_move, new_move, { board_state with b_king = new_move;
-            all_blacks = board_state.all_blacks |> Int64.logxor old_move
-              |> Int64.logor new_move})
+            ( old_move,
+              new_move,
+              {
+                board_state with
+                b_king = new_move;
+                all_blacks =
+                  board_state.all_blacks |> Int64.logxor old_move
+                  |> Int64.logor new_move;
+              } )
           else
             let temp_board = process_capture board_state new_move in
-            (old_move, new_move, { temp_board with b_king = new_move;
-            all_blacks = board_state.all_blacks |> Int64.logxor old_move
-              |> Int64.logor new_move})
+            ( old_move,
+              new_move,
+              {
+                temp_board with
+                b_king = new_move;
+                all_blacks =
+                  board_state.all_blacks |> Int64.logxor old_move
+                  |> Int64.logor new_move;
+              } )
       | "q" ->
           if board_state.w_turn then
             if Int64.(logand new_move board_state.all_blacks = zero) then
@@ -484,8 +507,9 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                   w_queen =
                     board_state.w_queen |> Int64.logxor old_move
                     |> Int64.logor new_move;
-                  all_whites = board_state.all_whites |> Int64.logxor old_move
-                    |> Int64.logor new_move
+                  all_whites =
+                    board_state.all_whites |> Int64.logxor old_move
+                    |> Int64.logor new_move;
                 } )
             else
               let temp_board = process_capture board_state new_move in
@@ -496,8 +520,9 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                   w_queen =
                     board_state.w_queen |> Int64.logxor old_move
                     |> Int64.logor new_move;
-                  all_whites = board_state.all_whites |> Int64.logxor old_move
-                    |> Int64.logor new_move
+                  all_whites =
+                    board_state.all_whites |> Int64.logxor old_move
+                    |> Int64.logor new_move;
                 } )
           else if Int64.(logand new_move board_state.all_whites = zero) then
             ( old_move,
@@ -507,8 +532,9 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                 b_queen =
                   board_state.b_queen |> Int64.logxor old_move
                   |> Int64.logor new_move;
-               all_blacks = board_state.all_blacks |> Int64.logxor old_move
-                  |> Int64.logor new_move
+                all_blacks =
+                  board_state.all_blacks |> Int64.logxor old_move
+                  |> Int64.logor new_move;
               } )
           else
             let temp_board = process_capture board_state new_move in
@@ -519,8 +545,9 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                 b_queen =
                   board_state.b_queen |> Int64.logxor old_move
                   |> Int64.logor new_move;
-               all_blacks = board_state.all_blacks |> Int64.logxor old_move
-                  |> Int64.logor new_move
+                all_blacks =
+                  board_state.all_blacks |> Int64.logxor old_move
+                  |> Int64.logor new_move;
               } )
       | "r" ->
           if board_state.w_turn then
@@ -532,8 +559,9 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                   w_rooks =
                     board_state.w_rooks |> Int64.logxor old_move
                     |> Int64.logor new_move;
-                  all_whites = board_state.all_whites |> Int64.logxor old_move
-                    |> Int64.logor new_move
+                  all_whites =
+                    board_state.all_whites |> Int64.logxor old_move
+                    |> Int64.logor new_move;
                 } )
             else
               let temp_board = process_capture board_state new_move in
@@ -544,8 +572,9 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                   w_rooks =
                     board_state.w_rooks |> Int64.logxor old_move
                     |> Int64.logor new_move;
-                  all_whites = board_state.all_whites |> Int64.logxor old_move
-                    |> Int64.logor new_move
+                  all_whites =
+                    board_state.all_whites |> Int64.logxor old_move
+                    |> Int64.logor new_move;
                 } )
           else if Int64.(logand new_move board_state.all_whites = zero) then
             ( old_move,
@@ -555,8 +584,9 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                 b_rooks =
                   board_state.b_rooks |> Int64.logxor old_move
                   |> Int64.logor new_move;
-               all_blacks = board_state.all_blacks |> Int64.logxor old_move
-                  |> Int64.logor new_move
+                all_blacks =
+                  board_state.all_blacks |> Int64.logxor old_move
+                  |> Int64.logor new_move;
               } )
           else
             let temp_board = process_capture board_state new_move in
@@ -567,8 +597,9 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                 b_rooks =
                   board_state.b_rooks |> Int64.logxor old_move
                   |> Int64.logor new_move;
-               all_blacks = board_state.all_blacks |> Int64.logxor old_move
-                  |> Int64.logor new_move
+                all_blacks =
+                  board_state.all_blacks |> Int64.logxor old_move
+                  |> Int64.logor new_move;
               } )
       | "n" ->
           if board_state.w_turn then
@@ -580,8 +611,9 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                   w_knights =
                     board_state.w_knights |> Int64.logxor old_move
                     |> Int64.logor new_move;
-                  all_whites = board_state.all_whites |> Int64.logxor old_move
-                    |> Int64.logor new_move
+                  all_whites =
+                    board_state.all_whites |> Int64.logxor old_move
+                    |> Int64.logor new_move;
                 } )
             else
               let temp_board = process_capture board_state new_move in
@@ -592,8 +624,9 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                   w_knights =
                     board_state.w_knights |> Int64.logxor old_move
                     |> Int64.logor new_move;
-                  all_whites = board_state.all_whites |> Int64.logxor old_move
-                    |> Int64.logor new_move
+                  all_whites =
+                    board_state.all_whites |> Int64.logxor old_move
+                    |> Int64.logor new_move;
                 } )
           else if Int64.(logand new_move board_state.all_whites = zero) then
             ( old_move,
@@ -603,8 +636,9 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                 b_knights =
                   board_state.b_knights |> Int64.logxor old_move
                   |> Int64.logor new_move;
-               all_blacks = board_state.all_blacks |> Int64.logxor old_move
-                  |> Int64.logor new_move
+                all_blacks =
+                  board_state.all_blacks |> Int64.logxor old_move
+                  |> Int64.logor new_move;
               } )
           else
             let temp_board = process_capture board_state new_move in
@@ -615,8 +649,9 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                 b_knights =
                   board_state.b_knights |> Int64.logxor old_move
                   |> Int64.logor new_move;
-               all_blacks = board_state.all_blacks |> Int64.logxor old_move
-                  |> Int64.logor new_move
+                all_blacks =
+                  board_state.all_blacks |> Int64.logxor old_move
+                  |> Int64.logor new_move;
               } )
       | "b" ->
           if board_state.w_turn then
@@ -628,8 +663,9 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                   w_bishops =
                     board_state.w_bishops |> Int64.logxor old_move
                     |> Int64.logor new_move;
-                  all_whites = board_state.all_whites |> Int64.logxor old_move
-                    |> Int64.logor new_move
+                  all_whites =
+                    board_state.all_whites |> Int64.logxor old_move
+                    |> Int64.logor new_move;
                 } )
             else
               let temp_board = process_capture board_state new_move in
@@ -640,8 +676,9 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                   w_bishops =
                     board_state.w_bishops |> Int64.logxor old_move
                     |> Int64.logor new_move;
-                  all_whites = board_state.all_whites |> Int64.logxor old_move
-                    |> Int64.logor new_move
+                  all_whites =
+                    board_state.all_whites |> Int64.logxor old_move
+                    |> Int64.logor new_move;
                 } )
           else if Int64.(logand new_move board_state.all_whites = zero) then
             ( old_move,
@@ -651,8 +688,9 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                 b_bishops =
                   board_state.b_bishops |> Int64.logxor old_move
                   |> Int64.logor new_move;
-               all_blacks = board_state.all_blacks |> Int64.logxor old_move
-                  |> Int64.logor new_move
+                all_blacks =
+                  board_state.all_blacks |> Int64.logxor old_move
+                  |> Int64.logor new_move;
               } )
           else
             let temp_board = process_capture board_state new_move in
@@ -663,8 +701,9 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                 b_bishops =
                   board_state.b_bishops |> Int64.logxor old_move
                   |> Int64.logor new_move;
-               all_blacks = board_state.all_blacks |> Int64.logxor old_move
-                  |> Int64.logor new_move
+                all_blacks =
+                  board_state.all_blacks |> Int64.logxor old_move
+                  |> Int64.logor new_move;
               } )
       | "p" ->
           if board_state.w_turn then
@@ -676,8 +715,9 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                   w_pawns =
                     board_state.w_pawns |> Int64.logxor old_move
                     |> Int64.logor new_move;
-                  all_whites = board_state.all_whites |> Int64.logxor old_move
-                    |> Int64.logor new_move
+                  all_whites =
+                    board_state.all_whites |> Int64.logxor old_move
+                    |> Int64.logor new_move;
                 } )
             else
               let temp_board = process_capture board_state new_move in
@@ -688,8 +728,9 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                   w_pawns =
                     board_state.w_pawns |> Int64.logxor old_move
                     |> Int64.logor new_move;
-                  all_whites = board_state.all_whites |> Int64.logxor old_move
-                    |> Int64.logor new_move
+                  all_whites =
+                    board_state.all_whites |> Int64.logxor old_move
+                    |> Int64.logor new_move;
                 } )
           else if Int64.(logand new_move board_state.all_whites = zero) then
             ( old_move,
@@ -699,8 +740,9 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                 b_pawns =
                   board_state.b_pawns |> Int64.logxor old_move
                   |> Int64.logor new_move;
-               all_blacks = board_state.all_blacks |> Int64.logxor old_move
-                  |> Int64.logor new_move
+                all_blacks =
+                  board_state.all_blacks |> Int64.logxor old_move
+                  |> Int64.logor new_move;
               } )
           else
             let temp_board = process_capture board_state new_move in
@@ -711,8 +753,9 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                 b_pawns =
                   board_state.b_pawns |> Int64.logxor old_move
                   |> Int64.logor new_move;
-                all_blacks = board_state.all_blacks |> Int64.logxor old_move
-                |> Int64.logor new_move
+                all_blacks =
+                  board_state.all_blacks |> Int64.logxor old_move
+                  |> Int64.logor new_move;
               } )
       | _ -> failwith "Piece Not Recognized")
 
@@ -738,8 +781,8 @@ let pseudolegal_moves (board_state : board_state) :
       (moves_pawn_single board_state board_state.w_turn)
   @ List.map
       (fun move -> move_piece_board board_state move "p")
-      (moves_pawn_double board_state board_state.w_turn) 
-   |> List.map(fun (a,b,c) -> (a,b, {c with w_turn = not c.w_turn}))
+      (moves_pawn_double board_state board_state.w_turn)
+  |> List.map (fun (a, b, c) -> (a, b, { c with w_turn = not c.w_turn }))
 
 (* Obtains the square the user would like to move to from their input command
    represented as an Int64.t that corresponds to the bitboard cmd has type
@@ -757,9 +800,9 @@ let process_square cmd =
   in
 
   ( Int64.shift_left Int64.one
-      (8 * (Char.code sq1_number - 49) + (104 - Char.code sq1_letter)),
+      ((8 * (Char.code sq1_number - 49)) + (104 - Char.code sq1_letter)),
     Int64.shift_left Int64.one
-      (8 * (Char.code sq2_number - 49) + (104 - Char.code sq2_letter)))
+      ((8 * (Char.code sq2_number - 49)) + (104 - Char.code sq2_letter)) )
 
 (* Obtains the piece that the user would like to move as a string. cmd has type
    Command.t *)
@@ -775,51 +818,61 @@ let rec_func (board_state : board_state) = raise (Failure "Unimplemented")
 let rec list_range range lst =
   if range = 0 then lst else list_range (range - 1) ([ range - 1 ] @ lst)
 
-let rec print_board board_state range =
+let rec print_board_helper board_state range =
   let range_as_list = list_range range [] in
+  Stdlib.print_string "";
   match List.rev range_as_list with
   (* | [] -> Stdlib.print_string "\ndone!" *)
   | [] -> Stdlib.print_string "\n"
   | h :: t ->
       if Int64.logand (Int64.shift_right_logical board_state.b_pawns h) 1L = 1L
-      then Stdlib.print_string "P"
+      then Stdlib.print_string "♙"
       else if
         Int64.logand (Int64.shift_right_logical board_state.b_bishops h) 1L = 1L
-      then Stdlib.print_string "B"
+      then Stdlib.print_string "♗"
       else if
         Int64.logand (Int64.shift_right_logical board_state.b_knights h) 1L = 1L
-      then Stdlib.print_string "N"
+      then Stdlib.print_string "♘"
       else if
         Int64.logand (Int64.shift_right_logical board_state.b_rooks h) 1L = 1L
-      then Stdlib.print_string "R"
+      then Stdlib.print_string "♖"
       else if
         Int64.logand (Int64.shift_right_logical board_state.b_queen h) 1L = 1L
-      then Stdlib.print_string "Q"
+      then Stdlib.print_string "♕"
       else if
         Int64.logand (Int64.shift_right_logical board_state.b_king h) 1L = 1L
-      then Stdlib.print_string "K"
+      then Stdlib.print_string "♔"
       else if
         Int64.logand (Int64.shift_right_logical board_state.w_pawns h) 1L = 1L
-      then Stdlib.print_string "p"
+      then Stdlib.print_string "♟︎"
       else if
         Int64.logand (Int64.shift_right_logical board_state.w_bishops h) 1L = 1L
-      then Stdlib.print_string "b"
+      then Stdlib.print_string "♝"
       else if
         Int64.logand (Int64.shift_right_logical board_state.w_knights h) 1L = 1L
-      then Stdlib.print_string "n"
+      then Stdlib.print_string "♞"
       else if
         Int64.logand (Int64.shift_right_logical board_state.w_rooks h) 1L = 1L
-      then Stdlib.print_string "r"
+      then Stdlib.print_string "♜"
       else if
         Int64.logand (Int64.shift_right_logical board_state.w_queen h) 1L = 1L
-      then Stdlib.print_string "q"
+      then Stdlib.print_string "♛"
       else if
         Int64.logand (Int64.shift_right_logical board_state.w_king h) 1L = 1L
-      then Stdlib.print_string "k"
+      then Stdlib.print_string "♚"
       else Stdlib.print_string ".";
-      if h mod 8 = 0 then Stdlib.print_string "\n" else Stdlib.print_string " ";
+      if h = 0 then
+        Stdlib.print_string
+          "\n   |_________________ \n\n      a b c d e f g h \n"
+      else if h mod 8 = 0 then
+        Stdlib.print_string ("\n" ^ Int.to_string (h / 8) ^ "  |  ")
+      else Stdlib.print_string " ";
 
-      print_board board_state (range - 1)
+      print_board_helper board_state (range - 1)
+
+let print_board board_state =
+  Stdlib.print_string "8  |  ";
+  print_board_helper board_state 64
 
 let pseudolegal_moves_pawns (board_state : board_state) :
     (Int64.t * Int64.t * board_state) list =
@@ -829,10 +882,10 @@ let pseudolegal_moves_pawns (board_state : board_state) :
   @ List.map
       (fun move -> move_piece_board board_state move "p")
       (moves_pawn_double board_state board_state.w_turn)
-   @ List.map
+  @ List.map
       (fun move -> move_piece_board board_state move "p")
       (moves_ep_captures board_state board_state.w_turn)
-   |> List.map(fun (a,b,c) -> (a,b, {c with w_turn = not c.w_turn}))
+  |> List.map (fun (a, b, c) -> (a, b, { c with w_turn = not c.w_turn }))
 
 let rec print_moves = function
   | [] -> ()
@@ -843,8 +896,8 @@ let rec print_moves = function
 let move bs cmd =
   let move_set = all_legal_moves (pseudolegal_moves_pawns bs) in
   let s, e = process_square cmd in
-  (* let _ = print_string (Int64.to_string s ^ " " ^ Int64.to_string e ^ "\n") in
-  let _ = print_moves move_set in *)
+  (* let _ = print_string (Int64.to_string s ^ " " ^ Int64.to_string e ^ "\n")
+     in let _ = print_moves move_set in *)
   let valid_move_list =
     List.filter (fun (a, b, _) -> s = a && e = b) move_set
   in
@@ -857,5 +910,4 @@ let move bs cmd =
    let s, e = process_square cmd in let _, _, mb = List.hd (List.filter (fun (a,
    b, _) -> (s, e) = (a, b)) move_set) in mb *)
 let get_val board_state = board_state.b_knights
-
 let get_turn board_state = if board_state.w_turn then "white" else "black"

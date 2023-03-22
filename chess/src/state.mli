@@ -12,7 +12,8 @@ val pseudolegal_moves : board_state -> (Int64.t * Int64.t * board_state) list
     helpers legal_moves_<piece type> as needed. Disregards checks which may
     invalidate moves. *)
 
-val pseudolegal_moves_pawns : board_state -> (Int64.t * Int64.t * board_state) list
+val pseudolegal_moves_pawns :
+  board_state -> (Int64.t * Int64.t * board_state) list
 
 val all_legal_moves :
   (Int64.t * Int64.t * board_state) list ->
@@ -28,8 +29,9 @@ val moves_king : board_state -> bool -> (Int64.t * Int64.t) list
     include castling *)
 
 val moves_kingcastle : board_state -> bool -> (Int64.t * Int64.t) list
-(** Given board_state, generate all LEGAL castlings represented by (from position,
-    to position) indicating king's position (true for white, false for black) *)
+(** Given board_state, generate all LEGAL castlings represented by (from
+    position, to position) indicating king's position (true for white, false for
+    black) *)
 
 val moves_queen : board_state -> bool -> (Int64.t * Int64.t) list
 (** Given board_state, generate all pseudolegal moves for queen (true for white,
@@ -54,15 +56,13 @@ val moves_pawn_double : board_state -> bool -> (Int64.t * Int64.t) list
     position)*)
 
 val moves_pawn_single : board_state -> bool -> (Int64.t * Int64.t) list
-(** Given board_state, generate all pseudolegal moves (excluding EP captures) for 
-    pawn single move forward or diagonal except for promotions (true for
-    white, false for black) represented by (from position, to
-    position) *)
+(** Given board_state, generate all pseudolegal moves (excluding EP captures)
+    for pawn single move forward or diagonal except for promotions (true for
+    white, false for black) represented by (from position, to position) *)
 
 val moves_ep_captures : board_state -> bool -> (Int64.t * Int64.t) list
-(** Given board_state, generate all pseudolegal EP captures (true for
-    white, false for black) represented by (from position, to
-    position) *)
+(** Given board_state, generate all pseudolegal EP captures (true for white,
+    false for black) represented by (from position, to position) *)
 
 val moves_pawn_attacks : board_state -> bool -> (Int64.t * Int64.t) list
 (** Given board_state, generate all squares attacked by pawns represented by
@@ -98,7 +98,7 @@ val rec_func : board_state -> unit
     for command corresponding to legal move, then recurses on BoardState
     corresponding to chosen move *)
 
-val print_board : board_state -> int -> unit
+val print_board : board_state -> unit
 (** print chess board*)
 
 val move : board_state -> Command.t -> board_state
@@ -106,5 +106,5 @@ val move : board_state -> Command.t -> board_state
     if checkmate then finish *)
 
 val get_turn : board_state -> string
-(** gets the current mover of the board ("white" for white's turn, 
-    "black" for black's turn)*)
+(** gets the current mover of the board ("white" for white's turn, "black" for
+    black's turn)*)
