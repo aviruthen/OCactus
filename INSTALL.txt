@@ -18,8 +18,9 @@ That should be all the installations you will need!
 
 To play the game:
 
-You will need to build the game by running
-command: dune build
+Make sure your directory is inside the chess folder.
+You can do so by running the following command:
+command: cd chess
 
 To run our game and play the UI, do
 command: make play

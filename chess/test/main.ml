@@ -44,7 +44,7 @@ let command_tests = [
 
 let rec board_printer board_list = match board_list with
 | [] -> ()
-| (_,a,b) :: t -> let _ = print_board b 64 in 
+| (_,a,b) :: t -> let _ = print_board b in 
 let _ = print_endline(Int64.to_string (get_val b)) in
 board_printer t
 
