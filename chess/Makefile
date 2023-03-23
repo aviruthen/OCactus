@@ -17,4 +17,10 @@ test:
 play:
 	OCAMLRUNPARAM=b dune exec bin/main.exe
 
+zip:
+	rm -f chess.zip
+	zip -r chess.zip . -x@exclude.lst
 
+clean:
+	dune clean
+	rm -f chess.zip
