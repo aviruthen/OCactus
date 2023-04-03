@@ -30,30 +30,32 @@ let command_tests =
        parse_test_invalid "no spaces" "a3a4"; parse_test_invalid "same square"
        "c1 c1"; parse_test_invalid "random" "asdflk214p9u124 1249u09v"; *) ]
 
-let command_tests = [
-  parse_test "basic input" "a3 a4" "a3 a4";
-  parse_test "uppercase both" "B3 C6" "b3 c6"; 
-  parse_test "uppercase one" "g8 F6" "g8 f6"; 
-  parse_test "extreme bounds" "a1 h8" "a1 h8"; 
-  parse_test_invalid "out of bounds invalid" "a0 c1"; 
-  parse_test_invalid "bad spacing" "a3   a4"; 
-  parse_test_invalid "no spaces" "a3a4"; 
-  parse_test_invalid "same square" "c1 c1";
-  parse_test_invalid "random" "asdflk214p9u124 1249u09v";
-]
+let command_tests =
+  [
+    parse_test "basic input" "a3 a4" "a3 a4";
+    parse_test "uppercase both" "B3 C6" "b3 c6";
+    parse_test "uppercase one" "g8 F6" "g8 f6";
+    parse_test "extreme bounds" "a1 h8" "a1 h8";
+    parse_test_invalid "out of bounds invalid" "a0 c1";
+    parse_test_invalid "bad spacing" "a3   a4";
+    parse_test_invalid "no spaces" "a3a4";
+    parse_test_invalid "same square" "c1 c1";
+    parse_test_invalid "random" "asdflk214p9u124 1249u09v";
+  ]
 
-let rec board_printer board_list = match board_list with
-| [] -> ()
-| (_,a,b) :: t -> let _ = print_board b in 
-let _ = print_endline(Int64.to_string (get_val b)) in
-board_printer t
+let rec board_printer board_list =
+  match board_list with
+  | [] -> ()
+  | (_, a, b) :: t ->
+      let _ = print_board b in
+      let _ = print_endline (Int64.to_string (get_val b)) in
+      board_printer t
 
 let _ = print_endline "TEST PAWNS"
-let _ = board_printer(pseudolegal_moves_pawns (init_chess))
-
+let _ = board_printer (pseudolegal_moves_pawns init_chess)
 let new_board = move init_chess (parse "e2 e4")
 let new_board1 = move new_board (parse "e7 e5")
-let _ = board_printer(pseudolegal_moves_pawns (new_board1))
+let _ = board_printer (pseudolegal_moves_pawns new_board1)
 let state_tests = []
 let piece_tests = [ pawn_tests "test" init_chess ]
 let gui_tests = []

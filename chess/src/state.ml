@@ -192,9 +192,117 @@ let moves_queen (board_state : board_state) (white_turn : bool) :
     (Int64.t * Int64.t) list =
   raise (Failure "Unimplemented")
 
+let rec exponent (num : Int64.t) (exp : Int64.t) =
+  if exp = 0L then 1L
+  else if exp = 1L then num
+  else exponent (Int64.mul num 2L) (Int64.sub exp 1L)
+
+let rec slider_loc_helper (num : Int64.t) (lst : Int64.t list) (acc : int) =
+  if num = 0L then lst
+  else
+    let new_num = Int64.shift_right_logical num 1 in
+    if Int64.logand num 1L = 1L then
+      slider_loc_helper new_num (exponent 2L (Int64.of_int acc) :: lst) (acc + 1)
+    else slider_loc_helper new_num lst (acc + 1)
+
+let slider_loc (num : Int64.t) = slider_loc_helper num [] 0
+
+let rook_helper (board_state : board_state) (new_r : Int64.t) (stay_r : Int64.t)
+    =
+  if board_state.w_turn then
+    if Int64.logand new_r board_state.all_whites = 0L && new_r <> 0L then
+      [ Int64.logor new_r stay_r ]
+    else []
+  else if Int64.logand new_r board_state.all_blacks = 0L && new_r <> 0L then
+    [ Int64.logor new_r stay_r ]
+  else []
+
+(** TODO: ROOK ONLY STOPS AT WHITE -> BLACK CAPTURE NOT OTHER WAY AROUND *)
+let rec rook_up (board_state : board_state) (move_r : Int64.t)
+    (stay_r : Int64.t) (bs_lst : Int64.t list) : Int64.t list =
+  let new_up_r = Int64.shift_left move_r 8 in
+  if Int64.logand new_up_r board_state.all_whites > 0L || new_up_r = 0L then
+    bs_lst
+  else if Int64.logand new_up_r board_state.all_blacks > 0L then
+    let new_bs_lst = rook_helper board_state new_up_r stay_r in
+    rook_up board_state 0L stay_r (new_bs_lst @ bs_lst)
+  else
+    let new_bs_lst = rook_helper board_state new_up_r stay_r in
+    rook_up board_state new_up_r stay_r (new_bs_lst @ bs_lst)
+
+(** TODO: ROOK ONLY STOPS AT WHITE -> BLACK CAPTURE NOT OTHER WAY AROUND *)
+let rec rook_down (board_state : board_state) (move_r : Int64.t)
+    (stay_r : Int64.t) (bs_lst : Int64.t list) : Int64.t list =
+  let new_down_r = Int64.shift_right move_r 8 in
+  if Int64.logand new_down_r board_state.all_whites > 0L || new_down_r = 0L then
+    bs_lst
+  else if Int64.logand new_down_r board_state.all_blacks > 0L then
+    let new_bs_lst = rook_helper board_state new_down_r stay_r in
+    rook_down board_state 0L stay_r (new_bs_lst @ bs_lst)
+  else
+    let new_bs_lst = rook_helper board_state new_down_r stay_r in
+    rook_down board_state new_down_r stay_r (new_bs_lst @ bs_lst)
+
+(** TODO: NEED TO MASK SO DOESN'T WRAP AROUND *)
+let rec rook_left (board_state : board_state) (move_r : Int64.t)
+    (stay_r : Int64.t) (bs_lst : Int64.t list) : Int64.t list =
+  let new_left_r = Int64.shift_left move_r 1 in
+  if Int64.logand new_left_r board_state.all_whites > 0L || new_left_r = 0L then
+    bs_lst
+  else if Int64.logand new_left_r board_state.all_blacks > 0L then
+    let new_bs_lst = rook_helper board_state new_left_r stay_r in
+    rook_left board_state 0L stay_r (new_bs_lst @ bs_lst)
+  else
+    let new_bs_lst = rook_helper board_state new_left_r stay_r in
+    rook_left board_state new_left_r stay_r (new_bs_lst @ bs_lst)
+
+(** TODO: NEED TO MASK SO DOESN'T WRAP AROUND *)
+let rec rook_right (board_state : board_state) (move_r : Int64.t)
+    (stay_r : Int64.t) (bs_lst : Int64.t list) : Int64.t list =
+  let new_right_r = Int64.shift_left move_r 1 in
+  if Int64.logand new_right_r board_state.all_whites > 0L || new_right_r = 0L
+  then bs_lst
+  else if Int64.logand new_right_r board_state.all_blacks > 0L then
+    let new_bs_lst = rook_helper board_state new_right_r stay_r in
+    rook_right board_state 0L stay_r (new_bs_lst @ bs_lst)
+  else
+    let new_bs_lst = rook_helper board_state new_right_r stay_r in
+    rook_right board_state new_right_r stay_r (new_bs_lst @ bs_lst)
+
+let rook_all_moves (board_state : board_state) (rooks : Int64.t) =
+  match slider_loc rooks with
+  | r1 :: r2 :: t ->
+      rook_up board_state r1 r2 []
+      @ rook_down board_state r1 r2 []
+      @ rook_left board_state r1 r2 []
+      @ rook_right board_state r1 r2 []
+      @ rook_up board_state r2 r1 []
+      @ rook_down board_state r2 r1 []
+      @ rook_left board_state r2 r1 []
+      @ rook_right board_state r2 r1 []
+  | _ -> []
+
+let rec combine_all_rooks (board_state : board_state)
+    (rook_moves : Int64.t list) lst =
+  if board_state.w_turn then
+    match rook_moves with
+    | [] -> lst
+    | h :: t -> combine_all_rooks board_state t ((board_state.w_rooks, h) :: lst)
+  else
+    match rook_moves with
+    | [] -> lst
+    | h :: t -> combine_all_rooks board_state t ((board_state.b_rooks, h) :: lst)
+
 let moves_rook (board_state : board_state) (white_turn : bool) :
     (Int64.t * Int64.t) list =
-  raise (Failure "Unimplemented")
+  if board_state.w_turn then
+    combine_all_rooks board_state
+      (rook_all_moves board_state board_state.w_rooks)
+      []
+  else
+    combine_all_rooks board_state
+      (rook_all_moves board_state board_state.b_rooks)
+      []
 
 let moves_knight (board_state : board_state) (white_turn : bool) :
     (Int64.t * Int64.t) list =
