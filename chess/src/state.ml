@@ -148,6 +148,23 @@ let rec logarithm (num : Int64.t) (acc : int) : int =
 
 let logarithm_iter (num : Int64.t) = logarithm num 0
 
+
+
+
+
+
+
+(********************************************************)
+(*                                                      *)
+(*                                                      *)
+(*                                                      *)
+(*                  ALL LEGAL MOVES                     *)
+(*                                                      *)
+(*                                                      *)
+(*                                                      *)
+(********************************************************)
+
+
 let all_legal_moves (board_moves : (Int64.t * Int64.t * board_state) list) :
     (Int64.t * Int64.t * board_state) list =
   List.filter
@@ -180,6 +197,22 @@ let list_join_iter (list1 : Int64.t list) (list2 : Int64.t list) :
     (Int64.t * Int64.t) list =
   list_join list1 list2 []
 
+
+
+
+
+
+(********************************************************)
+(*                                                      *)
+(*                                                      *)
+(*                                                      *)
+(*                   KING MOVEMENT                      *)
+(*                                                      *)
+(*                                                      *)
+(*                                                      *)
+(********************************************************)
+
+
 let moves_king (board_state : board_state) (white_turn : bool) :
     (Int64.t * Int64.t) list =
   raise (Failure "Unimplemented")
@@ -188,9 +221,40 @@ let moves_kingcastle (board_state : board_state) (white_turn : bool) :
     (Int64.t * Int64.t) list =
   raise (Failure "Unimplemented")
 
+
+
+
+
+
+(********************************************************)
+(*                                                      *)
+(*                                                      *)
+(*                                                      *)
+(*                   QUEEN MOVEMENT                     *)
+(*                                                      *)
+(*                                                      *)
+(*                                                      *)
+(********************************************************)
+
 let moves_queen (board_state : board_state) (white_turn : bool) :
     (Int64.t * Int64.t) list =
   raise (Failure "Unimplemented")
+
+
+
+
+
+
+
+(********************************************************)
+(*                                                      *)
+(*                                                      *)
+(*                                                      *)
+(*                    ROOK MOVEMENT                     *)
+(*                                                      *)
+(*                                                      *)
+(*                                                      *)
+(********************************************************)
 
 let rec exponent (num : Int64.t) (exp : Int64.t) =
   if exp = 0L then 1L
@@ -304,13 +368,62 @@ let moves_rook (board_state : board_state) (white_turn : bool) :
       (rook_all_moves board_state board_state.b_rooks)
       []
 
+
+
+
+
+
+
+(********************************************************)
+(*                                                      *)
+(*                                                      *)
+(*                                                      *)
+(*                   KNIGHT MOVEMENT                    *)
+(*                                                      *)
+(*                                                      *)
+(*                                                      *)
+(********************************************************)
+
 let moves_knight (board_state : board_state) (white_turn : bool) :
     (Int64.t * Int64.t) list =
   raise (Failure "Unimplemented")
 
+
+
+
+
+
+
+(********************************************************)
+(*                                                      *)
+(*                                                      *)
+(*                                                      *)
+(*                  BISHOP MOVEMENT                     *)
+(*                                                      *)
+(*                                                      *)
+(*                                                      *)
+(********************************************************)
+
 let moves_bishop (board_state : board_state) (white_turn : bool) :
     (Int64.t * Int64.t) list =
   raise (Failure "Unimplemented")
+
+
+
+
+
+
+
+(********************************************************)
+(*                                                      *)
+(*                                                      *)
+(*                                                      *)
+(*               GENERAL PAWN MOVEMENTS                 *)
+(*                                                      *)
+(*                                                      *)
+(*                                                      *)
+(********************************************************)
+
 
 let moves_pawn_double (board_state : board_state) (white_turn : bool) :
     (Int64.t * Int64.t) list =
@@ -428,6 +541,22 @@ let moves_pawn_single (board_state : board_state) (white_turn : bool) :
   let capture_moves = _moves_pawn_cap board_state white_turn filter in
   List.append forward_moves capture_moves
 
+
+
+
+
+
+
+(********************************************************)
+(*                                                      *)
+(*                                                      *)
+(*                                                      *)
+(*                SPECIAL PAWN MOVES                    *)
+(*                                                      *)
+(*                                                      *)
+(*                                                      *)
+(********************************************************)
+
 let moves_ep_captures (board_state : board_state) (white_turn : bool) :
     (Int64.t * Int64.t) list =
   if board_state.ep = Int64.zero then []
@@ -486,6 +615,22 @@ let list_or (bitmaps : (Int64.t * Int64.t) list) : Int64.t =
   let bitmaps = List.map (fun tup -> fst tup) bitmaps in
   List.fold_right Int64.logor bitmaps Int64.minus_one
 
+
+
+
+
+
+  
+ (********************************************************)
+(*                                                       *)
+(*                                                       *)
+(*                                                       *)
+(*                   ENEMY ATTACKS                       *)
+(*                                                       *)
+(*                                                       *)
+(*                                                       *)
+(*********************************************************) 
+
 let enemy_attacks (board_state : board_state) : Int64.t =
   let king_atk = list_or (moves_king board_state (not board_state.w_turn)) in
   let queen_atk = list_or (moves_queen board_state (not board_state.w_turn)) in
@@ -505,6 +650,22 @@ let enemy_attacks (board_state : board_state) : Int64.t =
   queen_atk |> Int64.logor king_atk |> Int64.logor rook_atk
   |> Int64.logor bishop_atk |> Int64.logor knight_atk |> Int64.logor pawn_atk
   |> Int64.logor promote_atk
+
+
+
+
+
+
+
+(********************************************************)
+(*                                                      *)
+(*                                                      *)
+(*                                                      *)
+(*                PSEUDOLEGAL MOVES                     *)
+(*                                                      *)
+(*                                                      *)
+(*                                                      *)
+(********************************************************)
 
 let piece_at_spot board_state (move : Int64.t) : string =
   if board_state.w_turn then
@@ -557,6 +718,8 @@ let process_capture board_state new_move : board_state =
         { board_state with b_pawns = Int64.logxor new_move board_state.w_pawns }
     | _ -> failwith "No Valid Capture Detected"
 
+    (* Given a move and a piece, recomputes every variable that is affected
+    to match the new board state (includes processing captures and new locations) *)
 let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
   match move with
   | old_move, new_move -> (
@@ -892,6 +1055,39 @@ let pseudolegal_moves (board_state : board_state) :
       (moves_pawn_double board_state board_state.w_turn)
   |> List.map (fun (a, b, c) -> (a, b, { c with w_turn = not c.w_turn }))
 
+
+let pseudolegal_moves_pawns (board_state : board_state) :
+  (Int64.t * Int64.t * board_state) list =
+  List.map
+    (fun move -> move_piece_board board_state move "p")
+    (moves_pawn_single board_state board_state.w_turn)
+  @ List.map
+      (fun move -> move_piece_board board_state move "p")
+      (moves_pawn_double board_state board_state.w_turn)
+  @ List.map
+      (fun move -> move_piece_board board_state move "p")
+      (moves_ep_captures board_state board_state.w_turn)
+  @ List.map 
+      (fun move -> move_piece_board board_state move "r")
+      (moves_rook board_state board_state.w_turn)
+  |> List.map (fun (a, b, c) -> (a, b, { c with w_turn = not c.w_turn }))
+
+
+
+
+
+
+(********************************************************)
+(*                                                      *)
+(*                                                      *)
+(*                                                      *)
+(*                  SELECTING MOVE                      *)
+(*                Processing commands                   *)
+(*                                                      *)
+(*                                                      *)
+(*                                                      *)
+(********************************************************)
+
 (* Obtains the square the user would like to move to from their input command
    represented as an Int64.t that corresponds to the bitboard cmd has type
    Command.t -- we assume that the string input is of the form "starting_space
@@ -982,19 +1178,6 @@ let print_board board_state =
   Stdlib.print_string "8  |  ";
   print_board_helper board_state 64
 
-let pseudolegal_moves_pawns (board_state : board_state) :
-    (Int64.t * Int64.t * board_state) list =
-  List.map
-    (fun move -> move_piece_board board_state move "p")
-    (moves_pawn_single board_state board_state.w_turn)
-  @ List.map
-      (fun move -> move_piece_board board_state move "p")
-      (moves_pawn_double board_state board_state.w_turn)
-  @ List.map
-      (fun move -> move_piece_board board_state move "p")
-      (moves_ep_captures board_state board_state.w_turn)
-  |> List.map (fun (a, b, c) -> (a, b, { c with w_turn = not c.w_turn }))
-
 let rec print_moves = function
   | [] -> ()
   | (a, b, c) :: t ->
@@ -1004,8 +1187,8 @@ let rec print_moves = function
 let move bs cmd =
   let move_set = all_legal_moves (pseudolegal_moves_pawns bs) in
   let s, e = process_square cmd in
-  (* let _ = print_string (Int64.to_string s ^ " " ^ Int64.to_string e ^ "\n")
-     in let _ = print_moves move_set in *)
+  let _ = print_string (Int64.to_string s ^ " " ^ Int64.to_string e ^ "\n")
+     in let _ = print_moves move_set in
   let valid_move_list =
     List.filter (fun (a, b, _) -> s = a && e = b) move_set
   in
