@@ -148,12 +148,6 @@ let rec logarithm (num : Int64.t) (acc : int) : int =
 
 let logarithm_iter (num : Int64.t) = logarithm num 0
 
-
-
-
-
-
-
 (********************************************************)
 (*                                                      *)
 (*                                                      *)
@@ -163,7 +157,6 @@ let logarithm_iter (num : Int64.t) = logarithm num 0
 (*                                                      *)
 (*                                                      *)
 (********************************************************)
-
 
 let all_legal_moves (board_moves : (Int64.t * Int64.t * board_state) list) :
     (Int64.t * Int64.t * board_state) list =
@@ -197,11 +190,6 @@ let list_join_iter (list1 : Int64.t list) (list2 : Int64.t list) :
     (Int64.t * Int64.t) list =
   list_join list1 list2 []
 
-
-
-
-
-
 (********************************************************)
 (*                                                      *)
 (*                                                      *)
@@ -212,7 +200,6 @@ let list_join_iter (list1 : Int64.t list) (list2 : Int64.t list) :
 (*                                                      *)
 (********************************************************)
 
-
 let moves_king (board_state : board_state) (white_turn : bool) :
     (Int64.t * Int64.t) list =
   raise (Failure "Unimplemented")
@@ -220,11 +207,6 @@ let moves_king (board_state : board_state) (white_turn : bool) :
 let moves_kingcastle (board_state : board_state) (white_turn : bool) :
     (Int64.t * Int64.t) list =
   raise (Failure "Unimplemented")
-
-
-
-
-
 
 (********************************************************)
 (*                                                      *)
@@ -239,12 +221,6 @@ let moves_kingcastle (board_state : board_state) (white_turn : bool) :
 let moves_queen (board_state : board_state) (white_turn : bool) :
     (Int64.t * Int64.t) list =
   raise (Failure "Unimplemented")
-
-
-
-
-
-
 
 (********************************************************)
 (*                                                      *)
@@ -368,12 +344,6 @@ let moves_rook (board_state : board_state) (white_turn : bool) :
       (rook_all_moves board_state board_state.b_rooks)
       []
 
-
-
-
-
-
-
 (********************************************************)
 (*                                                      *)
 (*                                                      *)
@@ -387,12 +357,6 @@ let moves_rook (board_state : board_state) (white_turn : bool) :
 let moves_knight (board_state : board_state) (white_turn : bool) :
     (Int64.t * Int64.t) list =
   raise (Failure "Unimplemented")
-
-
-
-
-
-
 
 (********************************************************)
 (*                                                      *)
@@ -408,12 +372,6 @@ let moves_bishop (board_state : board_state) (white_turn : bool) :
     (Int64.t * Int64.t) list =
   raise (Failure "Unimplemented")
 
-
-
-
-
-
-
 (********************************************************)
 (*                                                      *)
 (*                                                      *)
@@ -423,7 +381,6 @@ let moves_bishop (board_state : board_state) (white_turn : bool) :
 (*                                                      *)
 (*                                                      *)
 (********************************************************)
-
 
 let moves_pawn_double (board_state : board_state) (white_turn : bool) :
     (Int64.t * Int64.t) list =
@@ -541,12 +498,6 @@ let moves_pawn_single (board_state : board_state) (white_turn : bool) :
   let capture_moves = _moves_pawn_cap board_state white_turn filter in
   List.append forward_moves capture_moves
 
-
-
-
-
-
-
 (********************************************************)
 (*                                                      *)
 (*                                                      *)
@@ -603,25 +554,25 @@ let moves_pawn_attacks (board_state : board_state) (white_turn : bool) :
 
 let moves_promote_no_cap (board_state : board_state) (white_turn : bool) :
     (Int64.t * Int64.t) list =
-  let filter = if white_turn then white_last_file else black_last_file in
+  let filter =
+    if white_turn then Int64.shift_right_logical white_last_file 8
+    else Int64.shift_left black_last_file 8
+  in
   _moves_pawn_forward board_state white_turn filter
 
 let moves_promote_cap (board_state : board_state) (white_turn : bool) :
     (Int64.t * Int64.t) list =
-  let filter = if white_turn then white_last_file else black_last_file in
+  let filter =
+    if white_turn then Int64.shift_right_logical white_last_file 8
+    else Int64.shift_left black_last_file 8
+  in
   _moves_pawn_cap board_state white_turn filter
 
 let list_or (bitmaps : (Int64.t * Int64.t) list) : Int64.t =
   let bitmaps = List.map (fun tup -> fst tup) bitmaps in
   List.fold_right Int64.logor bitmaps Int64.minus_one
 
-
-
-
-
-
-  
- (********************************************************)
+(********************************************************)
 (*                                                       *)
 (*                                                       *)
 (*                                                       *)
@@ -629,7 +580,7 @@ let list_or (bitmaps : (Int64.t * Int64.t) list) : Int64.t =
 (*                                                       *)
 (*                                                       *)
 (*                                                       *)
-(*********************************************************) 
+(*********************************************************)
 
 let enemy_attacks (board_state : board_state) : Int64.t =
   let king_atk = list_or (moves_king board_state (not board_state.w_turn)) in
@@ -650,12 +601,6 @@ let enemy_attacks (board_state : board_state) : Int64.t =
   queen_atk |> Int64.logor king_atk |> Int64.logor rook_atk
   |> Int64.logor bishop_atk |> Int64.logor knight_atk |> Int64.logor pawn_atk
   |> Int64.logor promote_atk
-
-
-
-
-
-
 
 (********************************************************)
 (*                                                      *)
@@ -700,8 +645,8 @@ let process_capture board_state new_move : board_state =
         }
     | "p" ->
         { board_state with b_pawns = Int64.logxor new_move board_state.b_pawns }
-    (* This king pattern match is only used to process checks. It is not actually
-       A capturing move. This is called by detect_check *)
+    (* This king pattern match is only used to process checks. It is not
+       actually A capturing move. This is called by detect_check *)
     | "k" -> { board_state with in_check_b = true }
     | _ -> failwith "No Valid Capture Detected"
   else
@@ -721,13 +666,13 @@ let process_capture board_state new_move : board_state =
         }
     | "p" ->
         { board_state with w_pawns = Int64.logxor new_move board_state.w_pawns }
-    (* This king pattern match is only used to process checks. It is not actually
-       A capturing move. This is called by detect_check *)
+    (* This king pattern match is only used to process checks. It is not
+       actually A capturing move. This is called by detect_check *)
     | "k" -> { board_state with in_check_w = true }
     | _ -> failwith "No Valid Capture Detected"
 
-    (* Given a move and a piece, recomputes every variable that is affected
-    to match the new board state (includes processing captures and new locations) *)
+(* Given a move and a piece, recomputes every variable that is affected to match
+   the new board state (includes processing captures and new locations) *)
 let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
   match move with
   | old_move, new_move -> (
@@ -743,7 +688,7 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                   all_whites =
                     board_state.all_whites |> Int64.logxor old_move
                     |> Int64.logor new_move;
-                  ep = Int64.zero
+                  ep = Int64.zero;
                 } )
             else
               let temp_board = process_capture board_state new_move in
@@ -755,7 +700,7 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                   all_whites =
                     board_state.all_whites |> Int64.logxor old_move
                     |> Int64.logor new_move;
-                  ep = Int64.zero
+                  ep = Int64.zero;
                 } )
           else if Int64.(logand new_move board_state.all_whites = zero) then
             ( old_move,
@@ -766,7 +711,7 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                 all_blacks =
                   board_state.all_blacks |> Int64.logxor old_move
                   |> Int64.logor new_move;
-                ep = Int64.zero
+                ep = Int64.zero;
               } )
           else
             let temp_board = process_capture board_state new_move in
@@ -778,7 +723,7 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                 all_blacks =
                   board_state.all_blacks |> Int64.logxor old_move
                   |> Int64.logor new_move;
-                ep = Int64.zero
+                ep = Int64.zero;
               } )
       | "q" ->
           if board_state.w_turn then
@@ -793,7 +738,7 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                   all_whites =
                     board_state.all_whites |> Int64.logxor old_move
                     |> Int64.logor new_move;
-                  ep = Int64.zero
+                  ep = Int64.zero;
                 } )
             else
               let temp_board = process_capture board_state new_move in
@@ -807,7 +752,7 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                   all_whites =
                     board_state.all_whites |> Int64.logxor old_move
                     |> Int64.logor new_move;
-                  ep = Int64.zero
+                  ep = Int64.zero;
                 } )
           else if Int64.(logand new_move board_state.all_whites = zero) then
             ( old_move,
@@ -820,7 +765,7 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                 all_blacks =
                   board_state.all_blacks |> Int64.logxor old_move
                   |> Int64.logor new_move;
-                ep = Int64.zero
+                ep = Int64.zero;
               } )
           else
             let temp_board = process_capture board_state new_move in
@@ -834,7 +779,7 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                 all_blacks =
                   board_state.all_blacks |> Int64.logxor old_move
                   |> Int64.logor new_move;
-                ep = Int64.zero
+                ep = Int64.zero;
               } )
       | "r" ->
           if board_state.w_turn then
@@ -849,7 +794,7 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                   all_whites =
                     board_state.all_whites |> Int64.logxor old_move
                     |> Int64.logor new_move;
-                  ep = Int64.zero
+                  ep = Int64.zero;
                 } )
             else
               let temp_board = process_capture board_state new_move in
@@ -863,7 +808,7 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                   all_whites =
                     board_state.all_whites |> Int64.logxor old_move
                     |> Int64.logor new_move;
-                  ep = Int64.zero
+                  ep = Int64.zero;
                 } )
           else if Int64.(logand new_move board_state.all_whites = zero) then
             ( old_move,
@@ -876,7 +821,7 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                 all_blacks =
                   board_state.all_blacks |> Int64.logxor old_move
                   |> Int64.logor new_move;
-                ep = Int64.zero
+                ep = Int64.zero;
               } )
           else
             let temp_board = process_capture board_state new_move in
@@ -890,7 +835,7 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                 all_blacks =
                   board_state.all_blacks |> Int64.logxor old_move
                   |> Int64.logor new_move;
-                ep = Int64.zero
+                ep = Int64.zero;
               } )
       | "n" ->
           if board_state.w_turn then
@@ -905,7 +850,7 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                   all_whites =
                     board_state.all_whites |> Int64.logxor old_move
                     |> Int64.logor new_move;
-                  ep = Int64.zero
+                  ep = Int64.zero;
                 } )
             else
               let temp_board = process_capture board_state new_move in
@@ -919,7 +864,7 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                   all_whites =
                     board_state.all_whites |> Int64.logxor old_move
                     |> Int64.logor new_move;
-                  ep = Int64.zero
+                  ep = Int64.zero;
                 } )
           else if Int64.(logand new_move board_state.all_whites = zero) then
             ( old_move,
@@ -932,7 +877,7 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                 all_blacks =
                   board_state.all_blacks |> Int64.logxor old_move
                   |> Int64.logor new_move;
-                ep = Int64.zero
+                ep = Int64.zero;
               } )
           else
             let temp_board = process_capture board_state new_move in
@@ -946,7 +891,7 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                 all_blacks =
                   board_state.all_blacks |> Int64.logxor old_move
                   |> Int64.logor new_move;
-                ep = Int64.zero
+                ep = Int64.zero;
               } )
       | "b" ->
           if board_state.w_turn then
@@ -961,7 +906,7 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                   all_whites =
                     board_state.all_whites |> Int64.logxor old_move
                     |> Int64.logor new_move;
-                  ep = Int64.zero
+                  ep = Int64.zero;
                 } )
             else
               let temp_board = process_capture board_state new_move in
@@ -975,7 +920,7 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                   all_whites =
                     board_state.all_whites |> Int64.logxor old_move
                     |> Int64.logor new_move;
-                  ep = Int64.zero
+                  ep = Int64.zero;
                 } )
           else if Int64.(logand new_move board_state.all_whites = zero) then
             ( old_move,
@@ -988,7 +933,7 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                 all_blacks =
                   board_state.all_blacks |> Int64.logxor old_move
                   |> Int64.logor new_move;
-                ep = Int64.zero
+                ep = Int64.zero;
               } )
           else
             let temp_board = process_capture board_state new_move in
@@ -1002,7 +947,7 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                 all_blacks =
                   board_state.all_blacks |> Int64.logxor old_move
                   |> Int64.logor new_move;
-                ep = Int64.zero
+                ep = Int64.zero;
               } )
       | "p_s" ->
           if board_state.w_turn then
@@ -1017,7 +962,7 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                   all_whites =
                     board_state.all_whites |> Int64.logxor old_move
                     |> Int64.logor new_move;
-                  ep = Int64.zero
+                  ep = Int64.zero;
                 } )
             else
               let temp_board = process_capture board_state new_move in
@@ -1031,7 +976,7 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                   all_whites =
                     board_state.all_whites |> Int64.logxor old_move
                     |> Int64.logor new_move;
-                  ep = Int64.zero
+                  ep = Int64.zero;
                 } )
           else if Int64.(logand new_move board_state.all_whites = zero) then
             ( old_move,
@@ -1044,7 +989,7 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                 all_blacks =
                   board_state.all_blacks |> Int64.logxor old_move
                   |> Int64.logor new_move;
-                ep = Int64.zero
+                ep = Int64.zero;
               } )
           else
             let temp_board = process_capture board_state new_move in
@@ -1058,10 +1003,10 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                 all_blacks =
                   board_state.all_blacks |> Int64.logxor old_move
                   |> Int64.logor new_move;
-                ep = Int64.zero
+                ep = Int64.zero;
               } )
       | "p_d" ->
-        if board_state.w_turn then
+          if board_state.w_turn then
             ( old_move,
               new_move,
               {
@@ -1072,162 +1017,270 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                 all_whites =
                   board_state.all_whites |> Int64.logxor old_move
                   |> Int64.logor new_move;
-                ep = new_move
-              })
-        else
-          ( old_move,
-            new_move,
-            {
-              board_state with
-              b_pawns =
-                board_state.b_pawns |> Int64.logxor old_move
-                |> Int64.logor new_move;
-              all_blacks =
-                board_state.all_blacks |> Int64.logxor old_move
-                |> Int64.logor new_move;
-              ep = new_move
-            } )
-      | "p_ep" -> if board_state.w_turn then
-          (old_move, 
-          new_move,
-          {
-            board_state with
-            w_pawns = board_state.w_pawns |> Int64.logxor old_move 
-                                          |> Int64.logor new_move;
-            all_whites = board_state.all_whites |> Int64.logxor old_move 
-                                                |> Int64.logor new_move;
-            b_pawns = board_state.b_pawns |> Int64.logxor 
-                                            (Int64.shift_right_logical new_move 8);
-            all_blacks = board_state.all_blacks |> Int64.logxor 
-                                            (Int64.shift_right_logical new_move 8);
-            ep = Int64.zero          
-          })        
-        else 
-          (old_move, 
-          new_move, 
-          {
-            board_state with
-            b_pawns = board_state.b_pawns |> Int64.logxor old_move 
-                                          |> Int64.logor new_move;
-            all_blacks = board_state.all_blacks |> Int64.logxor old_move 
-                                                |> Int64.logor new_move;
-            w_pawns = board_state.w_pawns |> Int64.logxor 
-                                            (Int64.shift_right_logical new_move 8);
-            all_whites = board_state.all_whites |> Int64.logxor 
-                                            (Int64.shift_right_logical new_move 8);
-            ep = Int64.zero
-                })
+                ep = new_move;
+              } )
+          else
+            ( old_move,
+              new_move,
+              {
+                board_state with
+                b_pawns =
+                  board_state.b_pawns |> Int64.logxor old_move
+                  |> Int64.logor new_move;
+                all_blacks =
+                  board_state.all_blacks |> Int64.logxor old_move
+                  |> Int64.logor new_move;
+                ep = new_move;
+              } )
+      | "p_ep" ->
+          if board_state.w_turn then
+            ( old_move,
+              new_move,
+              {
+                board_state with
+                w_pawns =
+                  board_state.w_pawns |> Int64.logxor old_move
+                  |> Int64.logor new_move;
+                all_whites =
+                  board_state.all_whites |> Int64.logxor old_move
+                  |> Int64.logor new_move;
+                b_pawns =
+                  board_state.b_pawns
+                  |> Int64.logxor (Int64.shift_right_logical new_move 8);
+                all_blacks =
+                  board_state.all_blacks
+                  |> Int64.logxor (Int64.shift_right_logical new_move 8);
+                ep = Int64.zero;
+              } )
+          else
+            ( old_move,
+              new_move,
+              {
+                board_state with
+                b_pawns =
+                  board_state.b_pawns |> Int64.logxor old_move
+                  |> Int64.logor new_move;
+                all_blacks =
+                  board_state.all_blacks |> Int64.logxor old_move
+                  |> Int64.logor new_move;
+                w_pawns =
+                  board_state.w_pawns
+                  |> Int64.logxor (Int64.shift_right_logical new_move 8);
+                all_whites =
+                  board_state.all_whites
+                  |> Int64.logxor (Int64.shift_right_logical new_move 8);
+                ep = Int64.zero;
+              } )
       | _ -> failwith "Piece Not Recognized")
 
 let piece_movement = function
-| "p_s" | "p_d" | "p_ep" -> moves_pawn_single
-| "q" -> moves_queen
-| "r" -> moves_rook
-| "n" -> moves_knight
-| "b" -> moves_bishop
-| _ -> failwith "Bad Move Call in get_piece_move"
+  | "p_s" | "p_d" | "p_ep" -> moves_pawn_single
+  | "q" -> moves_queen
+  | "r" -> moves_rook
+  | "n" -> moves_knight
+  | "b" -> moves_bishop
+  | _ -> failwith "Bad Move Call in get_piece_move"
 
-let detect_check board_state move piece = 
+let detect_check board_state move piece =
   if board_state.w_turn then
     match piece with
-    | s -> 
+    | s ->
         let move_list =
-          List.map (fun move -> move_piece_board board_state move s)
-          ((piece_movement s) board_state board_state.w_turn) in
-        let in_check_lst = List.filter (fun (_, _, bs) -> bs.in_check_b) 
-                          move_list in 
-        if List.length in_check_lst = 0 
-          then {board_state with in_check_b = false}
-          else let _ = print_endline "Black in Check!" in
-          {board_state with in_check_b = true}
-  else 
+          List.map
+            (fun move -> move_piece_board board_state move s)
+            ((piece_movement s) board_state board_state.w_turn)
+        in
+        let in_check_lst =
+          List.filter (fun (_, _, bs) -> bs.in_check_b) move_list
+        in
+        if List.length in_check_lst = 0 then
+          { board_state with in_check_b = false }
+        else
+          let _ = print_endline "Black in Check!" in
+          { board_state with in_check_b = true }
+  else
     match piece with
-    | s -> 
+    | s ->
         let move_list =
-          List.map (fun move -> move_piece_board board_state move s)
-          ((piece_movement s) board_state board_state.w_turn) in
-        let in_check_lst = List.filter (fun (_, _, bs) -> bs.in_check_w) 
-                          move_list in 
-        if List.length in_check_lst = 0 
-          then {board_state with in_check_w = false}
-          else let _ = print_endline "White in Check!" in
-          {board_state with in_check_w = true}  
+          List.map
+            (fun move -> move_piece_board board_state move s)
+            ((piece_movement s) board_state board_state.w_turn)
+        in
+        let in_check_lst =
+          List.filter (fun (_, _, bs) -> bs.in_check_w) move_list
+        in
+        if List.length in_check_lst = 0 then
+          { board_state with in_check_w = false }
+        else
+          let _ = print_endline "White in Check!" in
+          { board_state with in_check_w = true }
 
-let rec query_promo () = 
+let rec query_promo () =
   print_endline
-  "\nSelect the piece for promotion:\n 
-  Type q for queen, r for rook, b for bishop, and n for night\n";
+    "\n\
+     Select the piece for promotion:\n\
+    \ 
+\n\n\
+    \  Type q for queen, r for rook, b for bishop, and n for night\n";
   match String.trim (read_line ()) with
   | exception End_of_file -> "ivd"
-  | m -> match m with
-    | "q" -> "q"
-    | "r" -> "r"
-    | "b" -> "b"
-    | "n" -> "n"
-    | _ -> print_endline "\nInvalid promotion! Try again!\n";
-      query_promo ()
+  | m -> (
+      match m with
+      | "q" -> "q"
+      | "r" -> "r"
+      | "b" -> "b"
+      | "n" -> "n"
+      | _ ->
+          print_endline "\nInvalid promotion! Try again!\n";
+          query_promo ())
 
-let promo_move move_list w_turn = 
-  if (w_turn) then
+let promo_move move_list w_turn =
+  if w_turn then
     match query_promo () with
-      | "q" -> List.filter (fun (om, nm, bs) -> 
-                Int64.logand bs.w_queen nm = Int64.one) move_list
-      | "r" -> List.filter (fun (om, nm, bs) -> 
-                Int64.logand bs.w_rooks nm = Int64.one) move_list
-      | "b" -> List.filter (fun (om, nm, bs) -> 
-                Int64.logand bs.w_bishops nm = Int64.one) move_list
-      | "n" -> List.filter (fun (om, nm, bs) -> 
-                Int64.logand bs.w_knights nm = Int64.one) move_list
-      | _ -> failwith "Invalid move entered for promotion!"
+    | "q" ->
+        List.filter
+          (fun (om, nm, bs) -> Int64.logand bs.w_queen nm = Int64.one)
+          move_list
+    | "r" ->
+        List.filter
+          (fun (om, nm, bs) -> Int64.logand bs.w_rooks nm = Int64.one)
+          move_list
+    | "b" ->
+        List.filter
+          (fun (om, nm, bs) -> Int64.logand bs.w_bishops nm = Int64.one)
+          move_list
+    | "n" ->
+        List.filter
+          (fun (om, nm, bs) -> Int64.logand bs.w_knights nm = Int64.one)
+          move_list
+    | _ -> failwith "Invalid move entered for promotion!"
   else
     match query_promo () with
-      | "q" -> List.filter (fun (om, nm, bs) -> 
-                Int64.logand bs.b_queen nm = Int64.one) move_list
-      | "r" -> List.filter (fun (om, nm, bs) -> 
-                  Int64.logand bs.b_rooks nm = Int64.one) move_list
-      | "b" -> List.filter (fun (om, nm, bs) -> 
-                  Int64.logand bs.b_bishops nm = Int64.one) move_list
-      | "n" -> List.filter (fun (om, nm, bs) -> 
-                  Int64.logand bs.b_knights nm = Int64.one) move_list
-      | _ -> failwith "Invalid move entered for promotion!"
+    | "q" ->
+        List.filter
+          (fun (om, nm, bs) -> Int64.logand bs.b_queen nm = Int64.one)
+          move_list
+    | "r" ->
+        List.filter
+          (fun (om, nm, bs) -> Int64.logand bs.b_rooks nm = Int64.one)
+          move_list
+    | "b" ->
+        List.filter
+          (fun (om, nm, bs) -> Int64.logand bs.b_bishops nm = Int64.one)
+          move_list
+    | "n" ->
+        List.filter
+          (fun (om, nm, bs) -> Int64.logand bs.b_knights nm = Int64.one)
+          move_list
+    | _ -> failwith "Invalid move entered for promotion!"
 
-let gen_promos board_state = 
-  (*let _ = print_int (List.length (moves_promote_cap board_state board_state.w_turn
-  @ moves_promote_no_cap board_state board_state.w_turn)) in*)
-  let promos = (let lst = List.map
-    (fun move -> move_piece_board board_state move "p_s")
-    (moves_promote_cap board_state board_state.w_turn) in
-    List.map (fun (om, nm, bs) -> 
-    (om, nm, detect_check bs (om, nm) "p_s")) lst)
-  @ (let lst = List.map
-  (fun move -> move_piece_board board_state move "p_s")
-  (moves_promote_no_cap board_state board_state.w_turn) in
-  List.map (fun (om, nm, bs) -> 
-  (om, nm, detect_check bs (om, nm) "p_s")) lst) in
-  let promos = 
-  (if board_state.w_turn then
-    List.map (fun (om, nm, bs) -> (om, nm, {bs with w_pawns =
-    Int64.logxor nm bs.w_pawns; w_queen = Int64.logor nm bs.w_queen})) promos 
-    @ List.map (fun (om, nm, bs) -> (om, nm, {bs with w_pawns =
-    Int64.logxor nm bs.w_pawns; w_rooks = Int64.logor nm bs.w_rooks})) promos  
-    @ List.map (fun (om, nm, bs) -> (om, nm, {bs with w_pawns =
-    Int64.logxor nm bs.w_pawns; w_bishops = Int64.logor nm bs.w_bishops})) promos  
-    @ List.map (fun (om, nm, bs) -> (om, nm, {bs with w_pawns =
-    Int64.logxor nm bs.w_pawns; w_knights = Int64.logor nm bs.w_knights})) promos 
-  else 
-    List.map (fun (om, nm, bs) -> (om, nm, {bs with b_pawns =
-    Int64.logxor nm bs.b_pawns; b_queen = Int64.logor nm bs.b_queen})) promos 
-    @ List.map (fun (om, nm, bs) -> (om, nm, {bs with b_pawns =
-    Int64.logxor nm bs.b_pawns; b_rooks = Int64.logor nm bs.b_rooks})) promos  
-    @ List.map (fun (om, nm, bs) -> (om, nm, {bs with b_pawns =
-    Int64.logxor nm bs.b_pawns; b_bishops = Int64.logor nm bs.b_bishops})) promos  
-    @ List.map (fun (om, nm, bs) -> (om, nm, {bs with b_pawns =
-    Int64.logxor nm bs.b_pawns; b_knights = Int64.logor nm bs.b_knights})) promos) in
-  List.map (fun (om, nm, bs) -> 
-    (om, nm, detect_check bs (om, nm) "p_s")) promos
+let gen_promos board_state =
+  (*let _ = print_int (List.length (moves_promote_cap board_state
+    board_state.w_turn @ moves_promote_no_cap board_state board_state.w_turn))
+    in*)
+  let promos =
+    (let lst =
+       List.map
+         (fun move -> move_piece_board board_state move "p_s")
+         (moves_promote_cap board_state board_state.w_turn)
+     in
+     List.map (fun (om, nm, bs) -> (om, nm, detect_check bs (om, nm) "p_s")) lst)
+    @
+    let lst =
+      List.map
+        (fun move -> move_piece_board board_state move "p_s")
+        (moves_promote_no_cap board_state board_state.w_turn)
+    in
+    List.map (fun (om, nm, bs) -> (om, nm, detect_check bs (om, nm) "p_s")) lst
+  in
+  let promos =
+    if board_state.w_turn then
+      List.map
+        (fun (om, nm, bs) ->
+          ( om,
+            nm,
+            {
+              bs with
+              w_pawns = Int64.logxor nm bs.w_pawns;
+              w_queen = Int64.logor nm bs.w_queen;
+            } ))
+        promos
+      @ List.map
+          (fun (om, nm, bs) ->
+            ( om,
+              nm,
+              {
+                bs with
+                w_pawns = Int64.logxor nm bs.w_pawns;
+                w_rooks = Int64.logor nm bs.w_rooks;
+              } ))
+          promos
+      @ List.map
+          (fun (om, nm, bs) ->
+            ( om,
+              nm,
+              {
+                bs with
+                w_pawns = Int64.logxor nm bs.w_pawns;
+                w_bishops = Int64.logor nm bs.w_bishops;
+              } ))
+          promos
+      @ List.map
+          (fun (om, nm, bs) ->
+            ( om,
+              nm,
+              {
+                bs with
+                w_pawns = Int64.logxor nm bs.w_pawns;
+                w_knights = Int64.logor nm bs.w_knights;
+              } ))
+          promos
+    else
+      List.map
+        (fun (om, nm, bs) ->
+          ( om,
+            nm,
+            {
+              bs with
+              b_pawns = Int64.logxor nm bs.b_pawns;
+              b_queen = Int64.logor nm bs.b_queen;
+            } ))
+        promos
+      @ List.map
+          (fun (om, nm, bs) ->
+            ( om,
+              nm,
+              {
+                bs with
+                b_pawns = Int64.logxor nm bs.b_pawns;
+                b_rooks = Int64.logor nm bs.b_rooks;
+              } ))
+          promos
+      @ List.map
+          (fun (om, nm, bs) ->
+            ( om,
+              nm,
+              {
+                bs with
+                b_pawns = Int64.logxor nm bs.b_pawns;
+                b_bishops = Int64.logor nm bs.b_bishops;
+              } ))
+          promos
+      @ List.map
+          (fun (om, nm, bs) ->
+            ( om,
+              nm,
+              {
+                bs with
+                b_pawns = Int64.logxor nm bs.b_pawns;
+                b_knights = Int64.logor nm bs.b_knights;
+              } ))
+          promos
+  in
+  List.map (fun (om, nm, bs) -> (om, nm, detect_check bs (om, nm) "p_s")) promos
 
-let is_promo om nm bs nb = 
-  let promo_moves = List.filter(fun (_,_, bs) -> bs = nb) (gen_promos bs) in
+let is_promo om nm bs nb =
+  let promo_moves = List.filter (fun (_, _, bs) -> bs = nb) (gen_promos bs) in
   not (List.length promo_moves = 0)
 
 let pseudolegal_moves (board_state : board_state) :
@@ -1235,69 +1288,89 @@ let pseudolegal_moves (board_state : board_state) :
   List.map
     (fun move -> move_piece_board board_state move "k")
     (moves_king board_state board_state.w_turn)
-  @ (let lst = List.map
-      (fun move -> move_piece_board board_state move "q")
-      (moves_queen board_state board_state.w_turn) in
-      List.map (fun (om, nm, bs) -> (om, nm, detect_check bs (om, nm) "q")) lst)
-  @ (let lst = List.map
-      (fun move -> move_piece_board board_state move "r")
-      (moves_rook board_state board_state.w_turn) in
-      List.map (fun (om, nm, bs) -> (om, nm, detect_check bs (om, nm) "r")) lst)
-  @ (let lst = List.map
-      (fun move -> move_piece_board board_state move "n")
-      (moves_knight board_state board_state.w_turn) in 
-      List.map (fun (om, nm, bs) -> (om, nm, detect_check bs (om, nm) "n")) lst)
-  @ (let lst = List.map
-      (fun move -> move_piece_board board_state move "b")
-      (moves_bishop board_state board_state.w_turn) in
-      List.map (fun (om, nm, bs) -> (om, nm, detect_check bs (om, nm) "b")) lst)
-  @ (let lst = List.map
-      (fun move -> move_piece_board board_state move "p_s")
-      (moves_pawn_single board_state board_state.w_turn) in 
-      List.map (fun (om, nm, bs) -> (om, nm, detect_check bs (om, nm) "p_s")) lst)
-  @ (let lst = List.map
-      (fun move -> move_piece_board board_state move "p_d")
-      (moves_pawn_double board_state board_state.w_turn) in 
-      List.map (fun (om, nm, bs) -> (om, nm, detect_check bs (om, nm) "p_d")) lst)
-  @ (let lst = List.map
-      (fun move -> move_piece_board board_state move "p_ep")
-      (moves_ep_captures board_state board_state.w_turn) in
-      List.map (fun (om, nm, bs) -> (om, nm, detect_check bs (om, nm) "p_ep")) lst)
+  @ (let lst =
+       List.map
+         (fun move -> move_piece_board board_state move "q")
+         (moves_queen board_state board_state.w_turn)
+     in
+     List.map (fun (om, nm, bs) -> (om, nm, detect_check bs (om, nm) "q")) lst)
+  @ (let lst =
+       List.map
+         (fun move -> move_piece_board board_state move "r")
+         (moves_rook board_state board_state.w_turn)
+     in
+     List.map (fun (om, nm, bs) -> (om, nm, detect_check bs (om, nm) "r")) lst)
+  @ (let lst =
+       List.map
+         (fun move -> move_piece_board board_state move "n")
+         (moves_knight board_state board_state.w_turn)
+     in
+     List.map (fun (om, nm, bs) -> (om, nm, detect_check bs (om, nm) "n")) lst)
+  @ (let lst =
+       List.map
+         (fun move -> move_piece_board board_state move "b")
+         (moves_bishop board_state board_state.w_turn)
+     in
+     List.map (fun (om, nm, bs) -> (om, nm, detect_check bs (om, nm) "b")) lst)
+  @ (let lst =
+       List.map
+         (fun move -> move_piece_board board_state move "p_s")
+         (moves_pawn_single board_state board_state.w_turn)
+     in
+     List.map (fun (om, nm, bs) -> (om, nm, detect_check bs (om, nm) "p_s")) lst)
+  @ (let lst =
+       List.map
+         (fun move -> move_piece_board board_state move "p_d")
+         (moves_pawn_double board_state board_state.w_turn)
+     in
+     List.map (fun (om, nm, bs) -> (om, nm, detect_check bs (om, nm) "p_d")) lst)
+  @ (let lst =
+       List.map
+         (fun move -> move_piece_board board_state move "p_ep")
+         (moves_ep_captures board_state board_state.w_turn)
+     in
+     List.map
+       (fun (om, nm, bs) -> (om, nm, detect_check bs (om, nm) "p_ep"))
+       lst)
   @ gen_promos board_state
-  |> List.map (fun (a, b, c) -> (a, b, { c with w_turn = not c.w_turn })) 
-
+  |> List.map (fun (a, b, c) -> (a, b, { c with w_turn = not c.w_turn }))
 
 let pseudolegal_moves_pawns (board_state : board_state) :
-  (Int64.t * Int64.t * board_state) list =
-  let lst = List.map
+    (Int64.t * Int64.t * board_state) list =
+  let lst =
+    List.map
       (fun move -> move_piece_board board_state move "p_s")
-      (moves_pawn_single board_state board_state.w_turn) in 
-      List.map (fun (om, nm, bs) -> (om, nm, detect_check bs (om, nm) "p_s")) lst
-  @ (let lst = List.map
-      (fun move -> move_piece_board board_state move "p_d")
-      (moves_pawn_double board_state board_state.w_turn) in 
-      List.map (fun (om, nm, bs) -> (om, nm, detect_check bs (om, nm) "p_d")) lst)
-  @ (let lst = List.map
-      (fun move -> move_piece_board board_state move "p_ep")
-      (moves_ep_captures board_state board_state.w_turn) in
-      List.map (fun (om, nm, bs) -> (om, nm, detect_check bs (om, nm) "p_ep")) lst)
-  @ (let lst = List.map
-      (fun move -> move_piece_board board_state move "r")
-      (moves_rook board_state board_state.w_turn) in
-      List.map (fun (om, nm, bs) -> (om, nm, detect_check bs (om, nm) "r")) lst)
+      (moves_pawn_single board_state board_state.w_turn)
+  in
+  List.map (fun (om, nm, bs) -> (om, nm, detect_check bs (om, nm) "p_s")) lst
+  @ (let lst =
+       List.map
+         (fun move -> move_piece_board board_state move "p_d")
+         (moves_pawn_double board_state board_state.w_turn)
+     in
+     List.map (fun (om, nm, bs) -> (om, nm, detect_check bs (om, nm) "p_d")) lst)
+  @ (let lst =
+       List.map
+         (fun move -> move_piece_board board_state move "p_ep")
+         (moves_ep_captures board_state board_state.w_turn)
+     in
+     List.map
+       (fun (om, nm, bs) -> (om, nm, detect_check bs (om, nm) "p_ep"))
+       lst)
+  @ (let lst =
+       List.map
+         (fun move -> move_piece_board board_state move "r")
+         (moves_rook board_state board_state.w_turn)
+     in
+     List.map (fun (om, nm, bs) -> (om, nm, detect_check bs (om, nm) "r")) lst)
   @ gen_promos board_state
-  (*@ (let lst = List.map
-      (fun move -> move_piece_board board_state move "p_s")
-      (moves_promote_cap board_state board_state.w_turn) in
-      List.map (fun (om, nm, bs) -> (om, nm, detect_check bs (om, nm) "p_s")) lst)
-  @ (let lst = List.map
-      (fun move -> move_piece_board board_state move "p_s")
-      (moves_promote_no_cap board_state board_state.w_turn) in
-      List.map (fun (om, nm, bs) -> (om, nm, detect_check bs (om, nm) "p_s")) lst)*)
-  |> List.map (fun (a, b, c) -> (a, b, { c with w_turn = not c.w_turn }))  
-
-
-
+  (*@ (let lst = List.map (fun move -> move_piece_board board_state move "p_s")
+    (moves_promote_cap board_state board_state.w_turn) in List.map (fun (om, nm,
+    bs) -> (om, nm, detect_check bs (om, nm) "p_s")) lst) @ (let lst = List.map
+    (fun move -> move_piece_board board_state move "p_s") (moves_promote_no_cap
+    board_state board_state.w_turn) in List.map (fun (om, nm, bs) -> (om, nm,
+    detect_check bs (om, nm) "p_s")) lst)*)
+  |> List.map (fun (a, b, c) -> (a, b, { c with w_turn = not c.w_turn }))
 
 (********************************************************)
 (*                                                      *)
@@ -1412,24 +1485,25 @@ let move bs cmd =
   let s, e = process_square cmd in
   (*let _ = print_string (Int64.to_string s ^ " " ^ Int64.to_string e ^ "\n") in *)
   (*let _ = print_moves move_set in*)
-  (* let _ = print_endline (Int64.to_string bs.ep) in
-  let _ = print_endline (string_of_int (List.length (moves_ep_captures bs true))) in
-  let _ = List.map (fun (a,b) -> print_endline ((Int64.to_string a) ^ " " ^ (Int64.to_string b))) (moves_ep_captures bs true) in*)
+  (* let _ = print_endline (Int64.to_string bs.ep) in let _ = print_endline
+     (string_of_int (List.length (moves_ep_captures bs true))) in let _ =
+     List.map (fun (a,b) -> print_endline ((Int64.to_string a) ^ " " ^
+     (Int64.to_string b))) (moves_ep_captures bs true) in*)
   let valid_move_list =
     List.filter (fun (a, b, _) -> s = a && e = b) move_set
   in
   if List.length valid_move_list < 1 then bs
   else
     let om, nm, next_board = List.hd valid_move_list in
-    (*let _ = print_endline (string_of_bool (is_promo om nm bs next_board)) in *)
-    (*let _, _, board = if List.length (gen_promos bs) = 0 
-      then (Int64.zero, Int64.zero, init_chess) else
-     List.hd (gen_promos bs) in
-    let _ = print_board board in*)
+    (*let _ = print_endline (string_of_bool (is_promo om nm bs next_board))
+      in *)
+    (*let _, _, board = if List.length (gen_promos bs) = 0 then (Int64.zero,
+      Int64.zero, init_chess) else List.hd (gen_promos bs) in let _ =
+      print_board board in*)
     (*let _ = print_endline (string_of_int (List.length (gen_promos bs))) in*)
-    if (is_promo om nm bs next_board) then 
-      let _, _, nb_promo = List.hd (promo_move valid_move_list bs.w_turn)
-        in nb_promo
+    if is_promo om nm bs next_board then
+      let _, _, nb_promo = List.hd (promo_move valid_move_list bs.w_turn) in
+      nb_promo
     else next_board
 
 (* let move bs cmd = let move_set = all_legal_moves (pseudolegal_moves bs) in
