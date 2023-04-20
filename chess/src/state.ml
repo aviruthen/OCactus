@@ -1153,6 +1153,83 @@ let detect_check board_state move piece =
           else let _ = print_endline "White in Check!" in
           {board_state with in_check_w = true}  
 
+let rec query_promo () = 
+  print_endline
+  "\nSelect the piece for promotion:\n 
+  Type q for queen, r for rook, b for bishop, and n for night\n";
+  match String.trim (read_line ()) with
+  | exception End_of_file -> "ivd"
+  | m -> match m with
+    | "q" -> "q"
+    | "r" -> "r"
+    | "b" -> "b"
+    | "n" -> "n"
+    | _ -> print_endline "\nInvalid promotion! Try again!\n";
+      query_promo ()
+
+let promo_move move_list w_turn = 
+  if (w_turn) then
+    match query_promo () with
+      | "q" -> List.filter (fun (om, nm, bs) -> 
+                Int64.logand bs.w_queen nm = Int64.one) move_list
+      | "r" -> List.filter (fun (om, nm, bs) -> 
+                Int64.logand bs.w_rooks nm = Int64.one) move_list
+      | "b" -> List.filter (fun (om, nm, bs) -> 
+                Int64.logand bs.w_bishops nm = Int64.one) move_list
+      | "n" -> List.filter (fun (om, nm, bs) -> 
+                Int64.logand bs.w_knights nm = Int64.one) move_list
+      | _ -> failwith "Invalid move entered for promotion!"
+  else
+    match query_promo () with
+      | "q" -> List.filter (fun (om, nm, bs) -> 
+                Int64.logand bs.b_queen nm = Int64.one) move_list
+      | "r" -> List.filter (fun (om, nm, bs) -> 
+                  Int64.logand bs.b_rooks nm = Int64.one) move_list
+      | "b" -> List.filter (fun (om, nm, bs) -> 
+                  Int64.logand bs.b_bishops nm = Int64.one) move_list
+      | "n" -> List.filter (fun (om, nm, bs) -> 
+                  Int64.logand bs.b_knights nm = Int64.one) move_list
+      | _ -> failwith "Invalid move entered for promotion!"
+
+let gen_promos board_state = 
+  (*let _ = print_int (List.length (moves_promote_cap board_state board_state.w_turn
+  @ moves_promote_no_cap board_state board_state.w_turn)) in*)
+  let promos = (let lst = List.map
+    (fun move -> move_piece_board board_state move "p_s")
+    (moves_promote_cap board_state board_state.w_turn) in
+    List.map (fun (om, nm, bs) -> 
+    (om, nm, detect_check bs (om, nm) "p_s")) lst)
+  @ (let lst = List.map
+  (fun move -> move_piece_board board_state move "p_s")
+  (moves_promote_no_cap board_state board_state.w_turn) in
+  List.map (fun (om, nm, bs) -> 
+  (om, nm, detect_check bs (om, nm) "p_s")) lst) in
+  let promos = 
+  (if board_state.w_turn then
+    List.map (fun (om, nm, bs) -> (om, nm, {bs with w_pawns =
+    Int64.logxor nm bs.w_pawns; w_queen = Int64.logor nm bs.w_queen})) promos 
+    @ List.map (fun (om, nm, bs) -> (om, nm, {bs with w_pawns =
+    Int64.logxor nm bs.w_pawns; w_rooks = Int64.logor nm bs.w_rooks})) promos  
+    @ List.map (fun (om, nm, bs) -> (om, nm, {bs with w_pawns =
+    Int64.logxor nm bs.w_pawns; w_bishops = Int64.logor nm bs.w_bishops})) promos  
+    @ List.map (fun (om, nm, bs) -> (om, nm, {bs with w_pawns =
+    Int64.logxor nm bs.w_pawns; w_knights = Int64.logor nm bs.w_knights})) promos 
+  else 
+    List.map (fun (om, nm, bs) -> (om, nm, {bs with b_pawns =
+    Int64.logxor nm bs.b_pawns; b_queen = Int64.logor nm bs.b_queen})) promos 
+    @ List.map (fun (om, nm, bs) -> (om, nm, {bs with b_pawns =
+    Int64.logxor nm bs.b_pawns; b_rooks = Int64.logor nm bs.b_rooks})) promos  
+    @ List.map (fun (om, nm, bs) -> (om, nm, {bs with b_pawns =
+    Int64.logxor nm bs.b_pawns; b_bishops = Int64.logor nm bs.b_bishops})) promos  
+    @ List.map (fun (om, nm, bs) -> (om, nm, {bs with b_pawns =
+    Int64.logxor nm bs.b_pawns; b_knights = Int64.logor nm bs.b_knights})) promos) in
+  List.map (fun (om, nm, bs) -> 
+    (om, nm, detect_check bs (om, nm) "p_s")) promos
+
+let is_promo om nm bs nb = 
+  let promo_moves = List.filter(fun (_,_, bs) -> bs = nb) (gen_promos bs) in
+  not (List.length promo_moves = 0)
+
 let pseudolegal_moves (board_state : board_state) :
     (Int64.t * Int64.t * board_state) list =
   List.map
@@ -1186,7 +1263,9 @@ let pseudolegal_moves (board_state : board_state) :
       (fun move -> move_piece_board board_state move "p_ep")
       (moves_ep_captures board_state board_state.w_turn) in
       List.map (fun (om, nm, bs) -> (om, nm, detect_check bs (om, nm) "p_ep")) lst)
-  |> List.map (fun (a, b, c) -> (a, b, { c with w_turn = not c.w_turn }))  
+  @ gen_promos board_state
+  |> List.map (fun (a, b, c) -> (a, b, { c with w_turn = not c.w_turn })) 
+
 
 let pseudolegal_moves_pawns (board_state : board_state) :
   (Int64.t * Int64.t * board_state) list =
@@ -1206,6 +1285,15 @@ let pseudolegal_moves_pawns (board_state : board_state) :
       (fun move -> move_piece_board board_state move "r")
       (moves_rook board_state board_state.w_turn) in
       List.map (fun (om, nm, bs) -> (om, nm, detect_check bs (om, nm) "r")) lst)
+  @ gen_promos board_state
+  (*@ (let lst = List.map
+      (fun move -> move_piece_board board_state move "p_s")
+      (moves_promote_cap board_state board_state.w_turn) in
+      List.map (fun (om, nm, bs) -> (om, nm, detect_check bs (om, nm) "p_s")) lst)
+  @ (let lst = List.map
+      (fun move -> move_piece_board board_state move "p_s")
+      (moves_promote_no_cap board_state board_state.w_turn) in
+      List.map (fun (om, nm, bs) -> (om, nm, detect_check bs (om, nm) "p_s")) lst)*)
   |> List.map (fun (a, b, c) -> (a, b, { c with w_turn = not c.w_turn }))  
 
 
@@ -1332,8 +1420,17 @@ let move bs cmd =
   in
   if List.length valid_move_list < 1 then bs
   else
-    let _, _, next_board = List.hd valid_move_list in
-    next_board
+    let om, nm, next_board = List.hd valid_move_list in
+    (*let _ = print_endline (string_of_bool (is_promo om nm bs next_board)) in *)
+    (*let _, _, board = if List.length (gen_promos bs) = 0 
+      then (Int64.zero, Int64.zero, init_chess) else
+     List.hd (gen_promos bs) in
+    let _ = print_board board in*)
+    (*let _ = print_endline (string_of_int (List.length (gen_promos bs))) in*)
+    if (is_promo om nm bs next_board) then 
+      let _, _, nb_promo = List.hd (promo_move valid_move_list bs.w_turn)
+        in nb_promo
+    else next_board
 
 (* let move bs cmd = let move_set = all_legal_moves (pseudolegal_moves bs) in
    let s, e = process_square cmd in let _, _, mb = List.hd (List.filter (fun (a,
