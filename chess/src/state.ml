@@ -59,6 +59,72 @@ let init_chess =
     in_check_b = false;
   }
 
+  (** list_range 10 [] returns [0; 1; 2; 3; 4; 5; 6; 7; 8; 9] *)
+let rec list_range range lst =
+  if range = 0 then lst else list_range (range - 1) ([ range - 1 ] @ lst)
+
+let rec print_board_helper board_state range =
+  let range_as_list = list_range range [] in
+  Stdlib.print_string "";
+  match List.rev range_as_list with
+  (* | [] -> Stdlib.print_string "\ndone!" *)
+  | [] -> Stdlib.print_string "\n"
+  | h :: t ->
+      if Int64.logand (Int64.shift_right_logical board_state.b_pawns h) 1L = 1L
+      then Stdlib.print_string "♙"
+      else if
+        Int64.logand (Int64.shift_right_logical board_state.b_bishops h) 1L = 1L
+      then Stdlib.print_string "♗"
+      else if
+        Int64.logand (Int64.shift_right_logical board_state.b_knights h) 1L = 1L
+      then Stdlib.print_string "♘"
+      else if
+        Int64.logand (Int64.shift_right_logical board_state.b_rooks h) 1L = 1L
+      then Stdlib.print_string "♖"
+      else if
+        Int64.logand (Int64.shift_right_logical board_state.b_queen h) 1L = 1L
+      then Stdlib.print_string "♕"
+      else if
+        Int64.logand (Int64.shift_right_logical board_state.b_king h) 1L = 1L
+      then Stdlib.print_string "♔"
+      else if
+        Int64.logand (Int64.shift_right_logical board_state.w_pawns h) 1L = 1L
+      then Stdlib.print_string "♟︎"
+      else if
+        Int64.logand (Int64.shift_right_logical board_state.w_bishops h) 1L = 1L
+      then Stdlib.print_string "♝"
+      else if
+        Int64.logand (Int64.shift_right_logical board_state.w_knights h) 1L = 1L
+      then Stdlib.print_string "♞"
+      else if
+        Int64.logand (Int64.shift_right_logical board_state.w_rooks h) 1L = 1L
+      then Stdlib.print_string "♜"
+      else if
+        Int64.logand (Int64.shift_right_logical board_state.w_queen h) 1L = 1L
+      then Stdlib.print_string "♛"
+      else if
+        Int64.logand (Int64.shift_right_logical board_state.w_king h) 1L = 1L
+      then Stdlib.print_string "♚"
+      else Stdlib.print_string ".";
+      if h = 0 then
+        Stdlib.print_string
+          "\n   |_________________ \n\n      a b c d e f g h \n"
+      else if h mod 8 = 0 then
+        Stdlib.print_string ("\n" ^ Int.to_string (h / 8) ^ "  |  ")
+      else Stdlib.print_string " ";
+
+      print_board_helper board_state (range - 1)
+
+let print_board board_state =
+  Stdlib.print_string "8  |  ";
+  print_board_helper board_state 64
+
+let rec print_moves = function
+  | [] -> ()
+  | (a, b, c) :: t ->
+      print_string (Int64.to_string a ^ " " ^ Int64.to_string b ^ "\n");
+      print_moves t
+
 let white_first_files = Int64.shift_right_logical Int64.minus_one 8
 let black_first_files = Int64.shift_left Int64.minus_one 8
 let white_last_file = Int64.logxor white_first_files Int64.minus_one
@@ -1123,7 +1189,7 @@ let rec query_promo () =
     "\n\
      Select the piece for promotion:\n\
     \ 
-\n\n\n\
+\n\n\
     \  Type q for queen, r for rook, b for bishop, and n for night\n";
   match String.trim (read_line ()) with
   | exception End_of_file -> "ivd"
@@ -1138,49 +1204,50 @@ let rec query_promo () =
           query_promo ())
 
 let promo_move move_list w_turn =
+  let piece = query_promo () in
   if w_turn then
-    match query_promo () with
+    match piece with
     | "q" ->
         List.filter
-          (fun (om, nm, bs) -> Int64.logand bs.w_queen nm = Int64.one)
+          (fun (om, nm, bs) -> Int64.logand bs.w_queen nm <> Int64.zero)
           move_list
     | "r" ->
         List.filter
-          (fun (om, nm, bs) -> Int64.logand bs.w_rooks nm = Int64.one)
+          (fun (om, nm, bs) -> Int64.logand bs.w_rooks nm <> Int64.zero)
           move_list
     | "b" ->
         List.filter
-          (fun (om, nm, bs) -> Int64.logand bs.w_bishops nm = Int64.one)
+          (fun (om, nm, bs) -> Int64.logand bs.w_bishops nm <> Int64.zero)
           move_list
     | "n" ->
         List.filter
-          (fun (om, nm, bs) -> Int64.logand bs.w_knights nm = Int64.one)
+          (fun (om, nm, bs) -> Int64.logand bs.w_knights nm <> Int64.zero)
           move_list
     | _ -> failwith "Invalid move entered for promotion!"
   else
-    match query_promo () with
+    match piece with
     | "q" ->
         List.filter
-          (fun (om, nm, bs) -> Int64.logand bs.b_queen nm = Int64.one)
+          (fun (om, nm, bs) -> Int64.logand bs.b_queen nm <> Int64.zero)
           move_list
     | "r" ->
         List.filter
-          (fun (om, nm, bs) -> Int64.logand bs.b_rooks nm = Int64.one)
+          (fun (om, nm, bs) -> Int64.logand bs.b_rooks nm <> Int64.zero)
           move_list
     | "b" ->
         List.filter
-          (fun (om, nm, bs) -> Int64.logand bs.b_bishops nm = Int64.one)
+          (fun (om, nm, bs) -> Int64.logand bs.b_bishops nm <> Int64.zero)
           move_list
     | "n" ->
         List.filter
-          (fun (om, nm, bs) -> Int64.logand bs.b_knights nm = Int64.one)
+          (fun (om, nm, bs) -> Int64.logand bs.b_knights nm <> Int64.zero)
           move_list
     | _ -> failwith "Invalid move entered for promotion!"
 
 let gen_promos board_state =
   (*let _ = print_int (List.length (moves_promote_cap board_state
-    board_state.w_turn @ moves_promote_no_cap board_state board_state.w_turn))
-    in*)
+    board_state.w_turn @ moves_promote_no_cap board_state board_state.w_turn)) in
+  let _ = print_endline "" in*)
   let promos =
     (let lst =
        List.map
@@ -1196,16 +1263,17 @@ let gen_promos board_state =
     in
     List.map (fun (om, nm, bs) -> (om, nm, detect_check bs (om, nm) "p_s")) lst
   in
-  let promos =
-    if board_state.w_turn then
+  let all_promos =
+    (if board_state.w_turn then
       List.map
         (fun (om, nm, bs) ->
           ( om,
             nm,
             {
               bs with
-              w_pawns = Int64.logxor nm bs.w_pawns;
+              w_pawns = Int64.logxor om (Int64.logxor nm (Int64.logxor om bs.w_pawns));
               w_queen = Int64.logor nm bs.w_queen;
+              all_whites = Int64.logor nm (Int64.logxor om bs.all_whites)
             } ))
         promos
       @ List.map
@@ -1214,8 +1282,9 @@ let gen_promos board_state =
               nm,
               {
                 bs with
-                w_pawns = Int64.logxor nm bs.w_pawns;
+                w_pawns = Int64.logxor om (Int64.logxor nm (Int64.logxor om bs.w_pawns));
                 w_rooks = Int64.logor nm bs.w_rooks;
+                all_whites = Int64.logor nm (Int64.logxor om bs.all_whites)
               } ))
           promos
       @ List.map
@@ -1224,8 +1293,9 @@ let gen_promos board_state =
               nm,
               {
                 bs with
-                w_pawns = Int64.logxor nm bs.w_pawns;
+                w_pawns = Int64.logxor om (Int64.logxor nm (Int64.logxor om bs.w_pawns));
                 w_bishops = Int64.logor nm bs.w_bishops;
+                all_whites = Int64.logor nm (Int64.logxor om bs.all_whites)
               } ))
           promos
       @ List.map
@@ -1234,8 +1304,9 @@ let gen_promos board_state =
               nm,
               {
                 bs with
-                w_pawns = Int64.logxor nm bs.w_pawns;
+                w_pawns = Int64.logxor om (Int64.logxor nm (Int64.logxor om bs.w_pawns));
                 w_knights = Int64.logor nm bs.w_knights;
+                all_whites = Int64.logor nm (Int64.logxor om bs.all_whites)
               } ))
           promos
     else
@@ -1245,8 +1316,9 @@ let gen_promos board_state =
             nm,
             {
               bs with
-              b_pawns = Int64.logxor nm bs.b_pawns;
+              b_pawns = Int64.logxor om (Int64.logxor nm (Int64.logxor om bs.b_pawns));
               b_queen = Int64.logor nm bs.b_queen;
+              all_blacks = Int64.logor nm (Int64.logxor om bs.all_blacks)
             } ))
         promos
       @ List.map
@@ -1255,8 +1327,9 @@ let gen_promos board_state =
               nm,
               {
                 bs with
-                b_pawns = Int64.logxor nm bs.b_pawns;
+                b_pawns = Int64.logxor om (Int64.logxor nm (Int64.logxor om bs.b_pawns));
                 b_rooks = Int64.logor nm bs.b_rooks;
+                all_blacks = Int64.logor nm (Int64.logxor om bs.all_blacks)
               } ))
           promos
       @ List.map
@@ -1265,8 +1338,9 @@ let gen_promos board_state =
               nm,
               {
                 bs with
-                b_pawns = Int64.logxor nm bs.b_pawns;
+                b_pawns = Int64.logxor om (Int64.logxor nm (Int64.logxor om bs.b_pawns));
                 b_bishops = Int64.logor nm bs.b_bishops;
+                all_blacks = Int64.logor nm (Int64.logxor om bs.all_blacks)
               } ))
           promos
       @ List.map
@@ -1275,16 +1349,25 @@ let gen_promos board_state =
               nm,
               {
                 bs with
-                b_pawns = Int64.logxor nm bs.b_pawns;
+                b_pawns = Int64.logxor om (Int64.logxor nm (Int64.logxor om bs.b_pawns));
                 b_knights = Int64.logor nm bs.b_knights;
+                all_blacks = Int64.logor nm (Int64.logxor om bs.all_blacks)
               } ))
-          promos
+          promos)
   in
-  List.map (fun (om, nm, bs) -> (om, nm, detect_check bs (om, nm) "p_s")) promos
+  (*let _ = print_int (List.length all_promos) in*)
+  let a = List.map (fun (om, nm, bs) -> (om, nm, detect_check bs (om, nm) "p_s")) all_promos in
+  let _ = List.map( fun (_, _, bs) -> print_board bs ) a in a
 
-let is_promo om nm bs nb =
-  let promo_moves = List.filter (fun (_, _, bs) -> bs = nb) (gen_promos bs) in
-  not (List.length promo_moves = 0)
+let is_promo bs om nm = 
+  let last_file = Int64.shift_left Int64.minus_one 56 in
+  let first_file = Int64.shift_right_logical Int64.minus_one 56 in
+  if bs.w_turn then
+    Int64.logand om bs.w_pawns <> Int64.zero && 
+    Int64.logand nm last_file <> Int64.zero
+  else
+    Int64.logand om bs.b_pawns <> Int64.zero && 
+    Int64.logand nm first_file <> Int64.zero
 
 let pseudolegal_moves (board_state : board_state) :
     (Int64.t * Int64.t * board_state) list =
@@ -1416,72 +1499,6 @@ let process_piece cmd = raise (Failure "Unimplemented")
    corresponding to chosen move *)
 let rec_func (board_state : board_state) = raise (Failure "Unimplemented")
 
-(** list_range 10 [] returns [0; 1; 2; 3; 4; 5; 6; 7; 8; 9] *)
-let rec list_range range lst =
-  if range = 0 then lst else list_range (range - 1) ([ range - 1 ] @ lst)
-
-let rec print_board_helper board_state range =
-  let range_as_list = list_range range [] in
-  Stdlib.print_string "";
-  match List.rev range_as_list with
-  (* | [] -> Stdlib.print_string "\ndone!" *)
-  | [] -> Stdlib.print_string "\n"
-  | h :: t ->
-      if Int64.logand (Int64.shift_right_logical board_state.b_pawns h) 1L = 1L
-      then Stdlib.print_string "♙"
-      else if
-        Int64.logand (Int64.shift_right_logical board_state.b_bishops h) 1L = 1L
-      then Stdlib.print_string "♗"
-      else if
-        Int64.logand (Int64.shift_right_logical board_state.b_knights h) 1L = 1L
-      then Stdlib.print_string "♘"
-      else if
-        Int64.logand (Int64.shift_right_logical board_state.b_rooks h) 1L = 1L
-      then Stdlib.print_string "♖"
-      else if
-        Int64.logand (Int64.shift_right_logical board_state.b_queen h) 1L = 1L
-      then Stdlib.print_string "♕"
-      else if
-        Int64.logand (Int64.shift_right_logical board_state.b_king h) 1L = 1L
-      then Stdlib.print_string "♔"
-      else if
-        Int64.logand (Int64.shift_right_logical board_state.w_pawns h) 1L = 1L
-      then Stdlib.print_string "♟︎"
-      else if
-        Int64.logand (Int64.shift_right_logical board_state.w_bishops h) 1L = 1L
-      then Stdlib.print_string "♝"
-      else if
-        Int64.logand (Int64.shift_right_logical board_state.w_knights h) 1L = 1L
-      then Stdlib.print_string "♞"
-      else if
-        Int64.logand (Int64.shift_right_logical board_state.w_rooks h) 1L = 1L
-      then Stdlib.print_string "♜"
-      else if
-        Int64.logand (Int64.shift_right_logical board_state.w_queen h) 1L = 1L
-      then Stdlib.print_string "♛"
-      else if
-        Int64.logand (Int64.shift_right_logical board_state.w_king h) 1L = 1L
-      then Stdlib.print_string "♚"
-      else Stdlib.print_string ".";
-      if h = 0 then
-        Stdlib.print_string
-          "\n   |_________________ \n\n      a b c d e f g h \n"
-      else if h mod 8 = 0 then
-        Stdlib.print_string ("\n" ^ Int.to_string (h / 8) ^ "  |  ")
-      else Stdlib.print_string " ";
-
-      print_board_helper board_state (range - 1)
-
-let print_board board_state =
-  Stdlib.print_string "8  |  ";
-  print_board_helper board_state 64
-
-let rec print_moves = function
-  | [] -> ()
-  | (a, b, c) :: t ->
-      print_string (Int64.to_string a ^ " " ^ Int64.to_string b ^ "\n");
-      print_moves t
-
 let move bs cmd =
   let move_set = all_legal_moves (pseudolegal_moves_pawns bs) in
 
@@ -1497,17 +1514,18 @@ let move bs cmd =
   in
   if List.length valid_move_list < 1 then bs
   else
-    let om, nm, next_board = List.hd valid_move_list in
+    if not (is_promo bs s e) then 
+      let om, nm, next_board = List.hd valid_move_list in next_board
+    else
+    let _, _, nb_promo = List.hd (promo_move valid_move_list bs.w_turn) in
+      nb_promo
     (*let _ = print_endline (string_of_bool (is_promo om nm bs next_board))
       in *)
     (*let _, _, board = if List.length (gen_promos bs) = 0 then (Int64.zero,
-      Int64.zero, init_chess) else List.hd (gen_promos bs) in let _ =
+      Int64.zero, init_chess) else List.hd (List.tl (gen_promos bs)) in let _ =
       print_board board in*)
     (*let _ = print_endline (string_of_int (List.length (gen_promos bs))) in*)
-    if is_promo om nm bs next_board then
-      let _, _, nb_promo = List.hd (promo_move valid_move_list bs.w_turn) in
-      nb_promo
-    else next_board
+      
 
 (* let move bs cmd = let move_set = all_legal_moves (pseudolegal_moves bs) in
    let s, e = process_square cmd in let _, _, mb = List.hd (List.filter (fun (a,

@@ -55,7 +55,14 @@ let _ = print_endline "TEST PAWNS"
 let _ = board_printer (pseudolegal_moves_pawns init_chess)
 let new_board = move init_chess (parse "e2 e4")
 let new_board1 = move new_board (parse "e7 e5")
-let _ = board_printer (pseudolegal_moves_pawns new_board1)
+(*let _ = board_printer (pseudolegal_moves_pawns new_board1)*)
+
+let _ = print_endline "TEST ROOKS"
+let new_board2 = move (move new_board1 (parse "h2 h4")) (parse "h7 h5")
+let _ = board_printer (pseudolegal_moves_pawns new_board2)
+
+let new_board3 = move (move (move new_board2 (parse "g2 g4")) (parse "g7 g5")) (parse "g4 h5")
+let _ = board_printer (pseudolegal_moves_pawns new_board3)
 let state_tests = []
 let piece_tests = [ pawn_tests "test" init_chess ]
 let gui_tests = []
