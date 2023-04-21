@@ -493,7 +493,10 @@ let _moves_pawn_cap (board_state : board_state) (white_turn : bool)
 
 let moves_pawn_single (board_state : board_state) (white_turn : bool) :
     (Int64.t * Int64.t) list =
-  let filter = if white_turn then white_first_files else black_first_files in
+  let filter =
+    if white_turn then Int64.shift_right_logical white_first_files 8
+    else Int64.shift_left black_first_files 8
+  in
   let forward_moves = _moves_pawn_forward board_state white_turn filter in
   let capture_moves = _moves_pawn_cap board_state white_turn filter in
   List.append forward_moves capture_moves
@@ -1120,7 +1123,7 @@ let rec query_promo () =
     "\n\
      Select the piece for promotion:\n\
     \ 
-\n\n\
+\n\n\n\
     \  Type q for queen, r for rook, b for bishop, and n for night\n";
   match String.trim (read_line ()) with
   | exception End_of_file -> "ivd"
