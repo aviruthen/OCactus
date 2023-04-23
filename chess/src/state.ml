@@ -194,7 +194,7 @@ let mirror_horizontal (num : Int64.t) : Int64.t =
 
 let rec pawn_lookup_builder_white (mask_map : (Int64.t * Int64.t) list)
     (counts : int) =
-  if counts > 63 then mask_map
+  if counts > 56 then mask_map
   else if counts mod 8 = 0 then
     pawn_lookup_builder_white
       (( Int64.shift_left Int64.one counts,
@@ -237,7 +237,7 @@ let all_legal_moves (board_moves : (Int64.t * Int64.t * board_state) list) :
     (Int64.t * Int64.t * board_state) list =
   List.filter
     (fun (_, _, c) ->
-      (not c.w_turn) <> c.in_check_w || c.w_turn <> c.in_check_b)
+      not ((not c.w_turn) && c.in_check_w || (c.w_turn) && c.in_check_b))
     board_moves
 
 let rec bit_loop (bitmap : Int64.t) (acc_maps : Int64.t list) (acc_count : int)
@@ -701,10 +701,6 @@ let moves_promote_cap (board_state : board_state) (white_turn : bool) :
   in
   _moves_pawn_cap board_state white_turn filter
 
-let list_or (bitmaps : (Int64.t * Int64.t) list) : Int64.t =
-  let bitmaps = List.map (fun tup -> fst tup) bitmaps in
-  List.fold_right Int64.logor bitmaps Int64.minus_one
-
 (********************************************************)
 (*                                                       *)
 (*                                                       *)
@@ -715,22 +711,30 @@ let list_or (bitmaps : (Int64.t * Int64.t) list) : Int64.t =
 (*                                                       *)
 (*********************************************************)
 
+let list_or (bitmaps : (Int64.t * Int64.t) list) : Int64.t =
+  let bitmaps = List.map (fun (_, tup) -> tup) bitmaps in
+  List.fold_right Int64.logor bitmaps Int64.zero
+
 let enemy_attacks (board_state : board_state) : Int64.t =
   (*let king_atk = list_or (moves_king board_state (not board_state.w_turn)) in
     let queen_atk = list_or (moves_queen board_state (not board_state.w_turn))
     in*)
-  let rook_atk = list_or (moves_rook board_state (not board_state.w_turn)) in
+  let rook_atk = list_or (moves_rook board_state board_state.w_turn) in
+  (*let _ = print_endline (Int64.to_string rook_atk) in*)
   let bishop_atk =
-    list_or (moves_bishop board_state (not board_state.w_turn))
+    list_or (moves_bishop board_state (board_state.w_turn))
   in
+  (*let _ = print_endline (Int64.to_string bishop_atk) in*)
   (*let knight_atk = list_or (moves_knight board_state (not board_state.w_turn))
     in*)
   let pawn_atk =
-    list_or (moves_pawn_attacks board_state (not board_state.w_turn))
+    list_or (moves_pawn_attacks board_state (board_state.w_turn))
   in
+  (*let _ = print_endline (Int64.to_string pawn_atk) in*)
   let promote_atk =
-    list_or (moves_promote_cap board_state (not board_state.w_turn))
+    list_or (moves_promote_cap board_state (board_state.w_turn))
   in
+  (*let _ = print_endline (Int64.to_string promote_atk) in*)
   (*queen_atk |> Int64.logor king_atk |> Int64.logor *)
   rook_atk
   |> Int64.logor bishop_atk (*|> Int64.logor knight_atk*)
@@ -832,7 +836,6 @@ let process_capture board_state new_move : board_state =
         }
     (* This king pattern match is only used to process checks. It is not
        actually A capturing move. This is called by detect_check *)
-    | "k" -> { board_state with in_check_w = true }
     | _ -> failwith "No Valid Capture Detected"
 
 (* Given a move and a piece, recomputes every variable that is affected to match
@@ -1246,15 +1249,30 @@ let piece_movement = function
   | "k" -> moves_king
   | _ -> failwith "Bad Move Call in get_piece_move"
 
-let detect_check board_state move piece =
-  (*let _ = print_endline (Int64.to_string (enemy_attacks board_state)) in if
-    board_state.w_turn then if Int64.logand (enemy_attacks board_state)
-    board_state.w_king <> Int64.zero then {board_state with in_check_w = true}
-    else {board_state with in_check_w = false} else if Int64.logand
-    (enemy_attacks board_state) board_state.b_king <> Int64.zero then
-    {board_state with in_check_b = true} else {board_state with in_check_b =
-    false}*)
+let detect_check board_state =
+  (*let _ = print_endline (Int64.to_string (enemy_attacks board_state)) in*) 
   if board_state.w_turn then
+  let board_temp = 
+      (if Int64.logand (enemy_attacks board_state) board_state.b_king <> Int64.zero
+      then (*let _ = print_endline "Black in Check!" in*)
+      {board_state with in_check_b = true}
+      else {board_state with in_check_b = false}) in 
+      if Int64.logand (enemy_attacks {board_state with w_turn = false}) board_state.w_king <> Int64.zero 
+      then (*let _ = print_endline "White in Check!" in*)
+           {board_temp with in_check_w = true} 
+      else {board_temp with in_check_w = false}
+   else 
+    let board_temp = 
+      (if Int64.logand (enemy_attacks {board_state with w_turn = true}) board_state.b_king <> Int64.zero
+      then (*let _ = print_endline "Black in Check!" in*)
+      {board_state with in_check_b = true}
+      else {board_state with in_check_b = false}) in 
+      if Int64.logand (enemy_attacks board_state) board_state.w_king <> Int64.zero 
+      then (*let _ = print_endline "White in Check!" in*)
+           {board_temp with in_check_w = true} 
+      else {board_temp with in_check_w = false}
+
+  (*if board_state.w_turn then
     match piece with
     | s ->
         let move_list =
@@ -1285,7 +1303,7 @@ let detect_check board_state move piece =
           { board_state with in_check_w = false }
         else
           let _ = print_endline "White in Check!" in
-          { board_state with in_check_w = true }
+          { board_state with in_check_w = true }*)
 
 let rec query_promo () =
   print_endline
@@ -1356,14 +1374,14 @@ let gen_promos board_state =
          (fun move -> move_piece_board board_state move "p_s")
          (moves_promote_cap board_state board_state.w_turn)
      in
-     List.map (fun (om, nm, bs) -> (om, nm, detect_check bs (om, nm) "p_s")) lst)
+     List.map (fun (om, nm, bs) -> (om, nm, detect_check bs)) lst)
     @
     let lst =
       List.map
         (fun move -> move_piece_board board_state move "p_s")
         (moves_promote_no_cap board_state board_state.w_turn)
     in
-    List.map (fun (om, nm, bs) -> (om, nm, detect_check bs (om, nm) "p_s")) lst
+    List.map (fun (om, nm, bs) -> (om, nm, detect_check bs)) lst
   in
   let all_promos =
     if board_state.w_turn then
@@ -1468,7 +1486,7 @@ let gen_promos board_state =
   (*let _ = print_int (List.length all_promos) in*)
   let a =
     List.map
-      (fun (om, nm, bs) -> (om, nm, detect_check bs (om, nm) "p_s"))
+      (fun (om, nm, bs) -> (om, nm, detect_check bs))
       all_promos
     (* in let _ = List.map (fun (_, _, bs) -> print_board bs) a *)
   in
@@ -1486,103 +1504,57 @@ let is_promo bs om nm =
 
 let pseudolegal_moves (board_state : board_state) :
     (Int64.t * Int64.t * board_state) list =
-  List.map
+  let move_lst = (List.map
     (fun move -> move_piece_board board_state move "k")
     (moves_king board_state board_state.w_turn)
-  @ (let lst =
-       List.map
-         (fun move -> move_piece_board board_state move "q")
-         (moves_queen board_state board_state.w_turn)
-     in
-     List.map (fun (om, nm, bs) -> (om, nm, detect_check bs (om, nm) "q")) lst)
-  @ (let lst =
-       List.map
-         (fun move -> move_piece_board board_state move "r")
-         (moves_rook board_state board_state.w_turn)
-     in
-     List.map (fun (om, nm, bs) -> (om, nm, detect_check bs (om, nm) "r")) lst)
-  @ (let lst =
-       List.map
-         (fun move -> move_piece_board board_state move "n")
-         (moves_knight board_state board_state.w_turn)
-     in
-     List.map (fun (om, nm, bs) -> (om, nm, detect_check bs (om, nm) "n")) lst)
-  @ (let lst =
-       List.map
-         (fun move -> move_piece_board board_state move "b")
-         (moves_bishop board_state board_state.w_turn)
-     in
-     List.map (fun (om, nm, bs) -> (om, nm, detect_check bs (om, nm) "b")) lst)
-  @ (let lst =
-       List.map
-         (fun move -> move_piece_board board_state move "p_s")
-         (moves_pawn_single board_state board_state.w_turn)
-     in
-     List.map (fun (om, nm, bs) -> (om, nm, detect_check bs (om, nm) "p_s")) lst)
-  @ (let lst =
-       List.map
-         (fun move -> move_piece_board board_state move "p_d")
-         (moves_pawn_double board_state board_state.w_turn)
-     in
-     List.map (fun (om, nm, bs) -> (om, nm, detect_check bs (om, nm) "p_d")) lst)
-  @ (let lst =
-       List.map
-         (fun move -> move_piece_board board_state move "p_ep")
-         (moves_ep_captures board_state board_state.w_turn)
-     in
-     List.map
-       (fun (om, nm, bs) -> (om, nm, detect_check bs (om, nm) "p_ep"))
-       lst)
-  @ gen_promos board_state
+  @ List.map
+    (fun move -> move_piece_board board_state move "q")
+    (moves_queen board_state board_state.w_turn)
+  @ List.map
+    (fun move -> move_piece_board board_state move "r")
+    (moves_rook board_state board_state.w_turn)
+  @ List.map
+    (fun move -> move_piece_board board_state move "n")
+    (moves_knight board_state board_state.w_turn)
+  @ List.map
+    (fun move -> move_piece_board board_state move "b")
+    (moves_bishop board_state board_state.w_turn)
+  @ List.map
+    (fun move -> move_piece_board board_state move "p_s")
+    (moves_pawn_single board_state board_state.w_turn)
+  @ List.map
+    (fun move -> move_piece_board board_state move "p_d")
+    (moves_pawn_double board_state board_state.w_turn)
+  @ List.map
+    (fun move -> move_piece_board board_state move "p_ep")
+    (moves_ep_captures board_state board_state.w_turn)
+  @ gen_promos board_state) in 
+     List.map (fun (om, nm, bs) -> (om, nm, detect_check bs)) move_lst
   |> List.map (fun (a, b, c) -> (a, b, { c with w_turn = not c.w_turn }))
 
 let pseudolegal_moves_pawns (board_state : board_state) :
     (Int64.t * Int64.t * board_state) list =
-  let lst =
-    List.map
-      (fun move -> move_piece_board board_state move "p_s")
-      (moves_pawn_single board_state board_state.w_turn)
-  in
-  List.map (fun (om, nm, bs) -> (om, nm, detect_check bs (om, nm) "p_s")) lst
-  @ (let lst =
-       List.map
-         (fun move -> move_piece_board board_state move "p_d")
-         (moves_pawn_double board_state board_state.w_turn)
-     in
-     List.map (fun (om, nm, bs) -> (om, nm, detect_check bs (om, nm) "p_d")) lst)
-  @ (let lst =
-       List.map
-         (fun move -> move_piece_board board_state move "p_ep")
-         (moves_ep_captures board_state board_state.w_turn)
-     in
-     List.map
-       (fun (om, nm, bs) -> (om, nm, detect_check bs (om, nm) "p_ep"))
-       lst)
-  @ (let lst =
-       List.map
-         (fun move -> move_piece_board board_state move "r")
-         (moves_rook board_state board_state.w_turn)
-     in
-     List.map (fun (om, nm, bs) -> (om, nm, detect_check bs (om, nm) "r")) lst)
-  @ (let lst =
-       List.map
-         (fun move -> move_piece_board board_state move "b")
-         (moves_bishop board_state board_state.w_turn)
-     in
-     List.map (fun (om, nm, bs) -> (om, nm, detect_check bs (om, nm) "b")) lst)
-  @ (let lst =
-       List.map
-         (fun move -> move_piece_board board_state move "k")
-         (moves_king board_state board_state.w_turn)
-     in
-     List.map (fun (om, nm, bs) -> (om, nm, detect_check bs (om, nm) "k")) lst)
-  @ gen_promos board_state
-  (*@ (let lst = List.map (fun move -> move_piece_board board_state move "p_s")
-    (moves_promote_cap board_state board_state.w_turn) in List.map (fun (om, nm,
-    bs) -> (om, nm, detect_check bs (om, nm) "p_s")) lst) @ (let lst = List.map
-    (fun move -> move_piece_board board_state move "p_s") (moves_promote_no_cap
-    board_state board_state.w_turn) in List.map (fun (om, nm, bs) -> (om, nm,
-    detect_check bs (om, nm) "p_s")) lst)*)
+  let move_lst =
+    (List.map
+    (fun move -> move_piece_board board_state move "k")
+    (moves_king board_state board_state.w_turn)
+  @ List.map
+    (fun move -> move_piece_board board_state move "r")
+    (moves_rook board_state board_state.w_turn)  
+  @ List.map
+    (fun move -> move_piece_board board_state move "b")
+    (moves_bishop board_state board_state.w_turn)
+  @ List.map
+    (fun move -> move_piece_board board_state move "p_s")
+    (moves_pawn_single board_state board_state.w_turn)
+  @ List.map
+    (fun move -> move_piece_board board_state move "p_d")
+    (moves_pawn_double board_state board_state.w_turn)
+  @ List.map
+    (fun move -> move_piece_board board_state move "p_ep")
+    (moves_ep_captures board_state board_state.w_turn)
+  @ gen_promos board_state) in 
+     List.map (fun (om, nm, bs) -> (om, nm, detect_check bs)) move_lst
   |> List.map (fun (a, b, c) -> (a, b, { c with w_turn = not c.w_turn }))
 
 (********************************************************)
@@ -1627,6 +1599,7 @@ let process_piece cmd = raise (Failure "Unimplemented")
 let rec_func (board_state : board_state) = raise (Failure "Unimplemented")
 
 let move bs cmd =
+  (*let _ = List.map (fun (_, _, b) -> print_board b) (pseudolegal_moves_pawns bs) in*)
   let move_set = all_legal_moves (pseudolegal_moves_pawns bs) in
 
   let s, e = process_square cmd in
