@@ -272,8 +272,9 @@ let list_join_iter list1 list2 = list_join list1 list2 []
 (*                                                      *)
 (********************************************************)
 
-let possible_squares (king_state : Int64.t) : (Int64.t * Int64.t) list =
-  let f =
+let pk_squares (king_state : Int64.t) (piece_color : Int64.t) :
+    (Int64.t * Int64.t) list =
+  let possibles =
     [
       (king_state, Int64.shift_right_logical king_state 9);
       (king_state, Int64.shift_right_logical king_state 8);
@@ -285,25 +286,22 @@ let possible_squares (king_state : Int64.t) : (Int64.t * Int64.t) list =
       (king_state, Int64.shift_left king_state 9);
     ]
   in
-  f
+  let rec get_col (inp : Int64.t) : Int64.t =
+    if inp <= 128L then inp else get_col (Int64.shift_right_logical inp 8)
+  in
+  List.filter
+    (fun (a, b) ->
+      b <> 0L
+      && Int64.(logxor piece_color b |> logand b) = b
+      && (get_col a <> 128L || get_col b <> 1L)
+      && (get_col a <> 1L || get_col b <> 128L))
+    possibles
 
 (* simply just gonna look at the eight squares a king can go to *)
 let moves_king (board_state : board_state) (white_turn : bool) :
     (Int64.t * Int64.t) list =
-  let possibles =
-    if white_turn then possible_squares board_state.w_king
-    else possible_squares board_state.b_king
-  in
-  if white_turn then
-    List.filter
-      (fun (_, b) ->
-        b <> 0L && Int64.(logxor board_state.all_whites b |> logand b) = b)
-      possibles
-  else
-    List.filter
-      (fun (_, b) ->
-        b <> 0L && Int64.(logxor board_state.all_blacks b |> logand b) = b)
-      possibles
+  if white_turn then pk_squares board_state.w_king board_state.all_whites
+  else pk_squares board_state.b_king board_state.all_blacks
 
 let moves_kingcastle (board_state : board_state) (white_turn : bool) :
     (Int64.t * Int64.t) list =
@@ -314,20 +312,6 @@ let moves_kingcastle (board_state : board_state) (white_turn : bool) :
 (*                                                      *)
 (*                                                      *)
 (*                   QUEEN MOVEMENT                     *)
-(*                                                      *)
-(*                                                      *)
-(*                                                      *)
-(********************************************************)
-
-let moves_queen (board_state : board_state) (white_turn : bool) :
-    (Int64.t * Int64.t) list =
-  raise (Failure "Unimplemented")
-
-(********************************************************)
-(*                                                      *)
-(*                                                      *)
-(*                                                      *)
-(*                    ROOK MOVEMENT                     *)
 (*                                                      *)
 (*                                                      *)
 (*                                                      *)
@@ -351,6 +335,103 @@ let rec slider_loc_helper (num : Int64.t) (lst : Int64.t list) (acc : int) =
 (* this uses the previous function so gets a list of piece locations like
    above *)
 let slider_loc (num : Int64.t) = slider_loc_helper num [] 0
+
+let queen_direction str pos =
+  match str with
+  | "up left" -> Int64.shift_left pos 9
+  | "up" -> Int64.shift_left pos 8
+  | "up right" -> Int64.shift_left pos 7
+  | "left" -> Int64.shift_left pos 1
+  | "right" -> Int64.shift_right_logical pos 1
+  | "down left" -> Int64.shift_right_logical pos 7
+  | "down" -> Int64.shift_right_logical pos 8
+  | "down right" -> Int64.shift_right_logical pos 9
+  | _ -> failwith "Bad Queen Direction"
+
+let rec move_queen_straight (board_state : board_state) (dir : string)
+    (mask : Int64.t) (white_turn : bool) (move_q : Int64.t) (stay_q : Int64.t)
+    (moves : (Int64.t * Int64.t) list) : (Int64.t * Int64.t) list =
+  let all_player =
+    if white_turn then board_state.all_whites else board_state.all_blacks
+  in
+  let all_opponent =
+    if white_turn then board_state.all_blacks else board_state.all_whites
+  in
+  (* if it hits own piece or goes above the board or it's 0 *)
+  let new_q = queen_direction dir move_q in
+  if
+    Int64.logand new_q all_player > 0L
+    || Int64.logand mask move_q = 1L
+    || new_q = 0L
+  then moves (* if it runs into opponent piece - takes the spot and stop *)
+  else
+    let move_pair = (stay_q, new_q) in
+    if Int64.logand new_q all_opponent > 0L then
+      move_pair :: moves (* it moves to an open spot *)
+    else
+      move_queen_straight board_state dir mask white_turn new_q stay_q
+        (move_pair :: moves)
+
+let rec move_queen_diag (board_state : board_state) (dir : string)
+    (mask1 : Int64.t) (mask2 : Int64.t) (white_turn : bool) (move_q : Int64.t)
+    (stay_q : Int64.t) (moves : (Int64.t * Int64.t) list) :
+    (Int64.t * Int64.t) list =
+  let all_player =
+    if white_turn then board_state.all_whites else board_state.all_blacks
+  in
+  let all_opponent =
+    if white_turn then board_state.all_blacks else board_state.all_whites
+  in
+  (* if it hits own piece or goes above the board or it's 0 *)
+  let new_q = queen_direction dir move_q in
+  if
+    Int64.logand new_q all_player > 0L
+    || Int64.logand mask1 move_q = 1L
+    || Int64.logand mask2 move_q = 1L
+    || new_q = 0L
+  then moves (* if it runs into opponent piece - takes the spot and stop *)
+  else
+    let move_pair = (stay_q, new_q) in
+    if Int64.logand new_q all_opponent > 0L then
+      move_pair :: moves (* it moves to an open spot *)
+    else
+      move_queen_diag board_state dir mask1 mask2 white_turn new_q stay_q
+        (move_pair :: moves)
+
+let rec all_directions_queen board_state white_turn lst =
+  match lst with
+  | [] -> []
+  | r :: t ->
+      move_queen_diag board_state "up left" white_first_files a_file white_turn
+        r r []
+      @ move_queen_straight board_state "up" white_last_file white_turn r r []
+      @ move_queen_diag board_state "up right" white_first_files h_file
+          white_turn r r []
+      @ move_queen_straight board_state "left" a_file white_turn r r []
+      @ move_queen_straight board_state "right" h_file white_turn r r []
+      @ move_queen_diag board_state "down left" black_first_files a_file
+          white_turn r r []
+      @ move_queen_straight board_state "down" black_last_file white_turn r r []
+      @ move_queen_diag board_state "down right" black_first_files h_file
+          white_turn r r []
+      @ all_directions_queen board_state white_turn t
+
+let moves_queen (board_state : board_state) (white_turn : bool) :
+    (Int64.t * Int64.t) list =
+  let queens =
+    if white_turn then board_state.w_queen else board_state.b_queen
+  in
+  all_directions_queen board_state white_turn (slider_loc queens)
+
+(********************************************************)
+(*                                                      *)
+(*                                                      *)
+(*                                                      *)
+(*                    ROOK MOVEMENT                     *)
+(*                                                      *)
+(*                                                      *)
+(*                                                      *)
+(********************************************************)
 
 let rook_direction str pos =
   match str with
@@ -804,24 +885,24 @@ let list_or (bitmaps : (Int64.t * Int64.t) list) : Int64.t =
   List.fold_right Int64.logor bitmaps Int64.zero
 
 let enemy_attacks (board_state : board_state) : Int64.t =
-  (*let king_atk = list_or (moves_king board_state (not board_state.w_turn)) in
-    let queen_atk = list_or (moves_queen board_state (not board_state.w_turn))
-    in*)
+  let king_atk = list_or (moves_king board_state board_state.w_turn) in
+  let queen_atk = list_or (moves_queen board_state board_state.w_turn)
+    in
   let rook_atk = list_or (moves_rook board_state board_state.w_turn) in
   (*let _ = print_endline (Int64.to_string rook_atk) in*)
   let bishop_atk = list_or (moves_bishop board_state board_state.w_turn) in
   (*let _ = print_endline (Int64.to_string bishop_atk) in*)
-  (*let knight_atk = list_or (moves_knight board_state (not board_state.w_turn))
-    in*)
+  let knight_atk = list_or (moves_knight board_state board_state.w_turn)
+    in
   let pawn_atk = list_or (moves_pawn_attacks board_state board_state.w_turn) in
   (*let _ = print_endline (Int64.to_string pawn_atk) in*)
   let promote_atk =
     list_or (moves_promote_cap board_state board_state.w_turn)
   in
   (*let _ = print_endline (Int64.to_string promote_atk) in*)
-  (*queen_atk |> Int64.logor king_atk |> Int64.logor *)
+  queen_atk |> Int64.logor king_atk |> Int64.logor
   rook_atk
-  |> Int64.logor bishop_atk (*|> Int64.logor knight_atk*)
+  |> Int64.logor bishop_atk |> Int64.logor knight_atk
   |> Int64.logor pawn_atk |> Int64.logor promote_atk
 
 (********************************************************)
@@ -1618,6 +1699,9 @@ let pseudolegal_moves_pawns (board_state : board_state) :
       (fun move -> move_piece_board board_state move "k")
       (moves_king board_state board_state.w_turn)
     @ List.map
+        (fun move -> move_piece_board board_state move "q")
+        (moves_queen board_state board_state.w_turn)
+    @ List.map
         (fun move -> move_piece_board board_state move "r")
         (moves_rook board_state board_state.w_turn)
     @ List.map
@@ -1679,9 +1763,9 @@ let process_piece cmd = raise (Failure "Unimplemented")
 let rec_func (board_state : board_state) = raise (Failure "Unimplemented")
 
 let move bs cmd =
-  (*let _ = List.map (fun (_, _, b) -> print_board b) (pseudolegal_moves_pawns
-    bs) in*)
-  let move_set = all_legal_moves (pseudolegal_moves_pawns bs) in
+  let _ = List.map (fun (_, _, b) -> print_board b) (pseudolegal_moves
+    bs) in
+  let move_set = all_legal_moves (pseudolegal_moves bs) in
 
   let s, e = process_square cmd in
   (*let _ = print_string (Int64.to_string s ^ " " ^ Int64.to_string e ^ "\n") in *)
