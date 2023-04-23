@@ -275,9 +275,31 @@ let list_join_iter (list1 : Int64.t list) (list2 : Int64.t list) :
 (*                                                      *)
 (********************************************************)
 
+
+let possible_squares (king_state : Int64.t) : (Int64.t * Int64.t) list = 
+  let f = (king_state, Int64.shift_right_logical king_state 9) ::
+  (king_state, Int64.shift_right_logical king_state 8) ::
+  (king_state, Int64.shift_right_logical king_state 7) ::
+  (king_state, Int64.shift_right_logical king_state 1) ::
+  (king_state, Int64.shift_left king_state 1) ::
+  (king_state, Int64.shift_left king_state 7) ::
+  (king_state, Int64.shift_left king_state 8) ::
+  (king_state, Int64.shift_left king_state 9) :: []
+  in f
+(* simply just gonna look at the eight squares a king can go to *)
 let moves_king (board_state : board_state) (white_turn : bool) :
     (Int64.t * Int64.t) list =
-  raise (Failure "Unimplemented")
+  let possibles = if white_turn then possible_squares board_state.w_king else
+    possible_squares board_state.b_king in
+    if white_turn then 
+      List.filter (fun (_, b) -> b <> 0L && 
+        Int64.((logxor board_state.all_whites b |> logand b)) = b) possibles
+    else
+      List.filter (fun (_, b) -> b <> 0L && 
+        Int64.((logxor board_state.all_blacks b |> logand b)) = b) possibles
+
+    
+    
 
 let moves_kingcastle (board_state : board_state) (white_turn : bool) :
     (Int64.t * Int64.t) list =
@@ -1298,6 +1320,7 @@ let piece_movement = function
   | "r" -> moves_rook
   | "n" -> moves_knight
   | "b" -> moves_bishop
+  | "k" -> moves_king
   | _ -> failwith "Bad Move Call in get_piece_move"
 
 let detect_check board_state move piece =
@@ -1351,14 +1374,18 @@ let rec query_promo () =
      Select the piece for promotion:\n\
     \ 
 \n\n\
-    \  Type q for queen, r for rook, b for bishop, and n for night\n";
+    \  Type q for (q)ueen, r for (r)ook, b for (b)ishop, and n for k(n)ight\n";
   match String.trim (read_line ()) with
   | exception End_of_file -> "ivd"
   | m -> (
       match m with
+      | "Q"
       | "q" -> "q"
+      | "R"
       | "r" -> "r"
+      | "B"
       | "b" -> "b"
+      | "N"
       | "n" -> "n"
       | _ ->
           print_endline "\nInvalid promotion! Try again!\n";
@@ -1629,6 +1656,12 @@ let pseudolegal_moves_pawns (board_state : board_state) :
          (moves_bishop board_state board_state.w_turn)
      in
      List.map (fun (om, nm, bs) -> (om, nm, detect_check bs (om, nm) "b")) lst)
+  @ (let lst = 
+      List.map
+        (fun move -> move_piece_board board_state move "k")
+        (moves_king board_state board_state.w_turn)
+      in
+      List.map (fun (om, nm, bs) -> (om, nm, detect_check bs (om, nm) "k")) lst)
   @ gen_promos board_state
   (*@ (let lst = List.map (fun move -> move_piece_board board_state move "p_s")
     (moves_promote_cap board_state board_state.w_turn) in List.map (fun (om, nm,
@@ -1680,7 +1713,8 @@ let process_piece cmd = raise (Failure "Unimplemented")
 let rec_func (board_state : board_state) = raise (Failure "Unimplemented")
 
 let move bs cmd =
-  let move_set = all_legal_moves (pseudolegal_moves_pawns bs) in
+  let move_set = 
+  all_legal_moves (pseudolegal_moves_pawns bs) in
 
   let s, e = process_square cmd in
   (*let _ = print_string (Int64.to_string s ^ " " ^ Int64.to_string e ^ "\n") in *)
