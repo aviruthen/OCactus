@@ -21,9 +21,12 @@ type board_state = {
   w_turn : bool;
   in_check_w : bool;
   in_check_b : bool;
+  move_number : int;
+  fifty_move : int;
+  prev_boards : board_state list;
 }
 
-let init_chess =
+let init =
   {
     b_pawns =
       Int64.(
@@ -57,7 +60,12 @@ let init_chess =
     w_turn = true;
     in_check_w = false;
     in_check_b = false;
-  }
+    move_number = 0;
+    fifty_move = 0;
+    prev_boards = []
+}
+
+let init_chess = {init with prev_boards = init :: init.prev_boards}
 
 (** list_range 10 [] returns [0; 1; 2; 3; 4; 5; 6; 7; 8; 9] *)
 let rec list_range range lst =
@@ -977,30 +985,35 @@ let process_capture board_state new_move : board_state =
           board_state with
           b_queen = Int64.logxor new_move board_state.b_queen;
           all_blacks = Int64.logxor new_move board_state.all_blacks;
+          fifty_move = 0;
         }
     | "r" ->
         {
           board_state with
           b_rooks = Int64.logxor new_move board_state.b_rooks;
           all_blacks = Int64.logxor new_move board_state.all_blacks;
+          fifty_move = 0;
         }
     | "n" ->
         {
           board_state with
           b_knights = Int64.logxor new_move board_state.b_knights;
           all_blacks = Int64.logxor new_move board_state.all_blacks;
+          fifty_move = 0;
         }
     | "b" ->
         {
           board_state with
           b_bishops = Int64.logxor new_move board_state.b_bishops;
           all_blacks = Int64.logxor new_move board_state.all_blacks;
+          fifty_move = 0;
         }
     | "p" ->
         {
           board_state with
           b_pawns = Int64.logxor new_move board_state.b_pawns;
           all_blacks = Int64.logxor new_move board_state.all_blacks;
+          fifty_move = 0;
         }
     (* This king pattern match is only used to process checks. It is not
        actually A capturing move. This is called by detect_check *)
@@ -1013,30 +1026,35 @@ let process_capture board_state new_move : board_state =
           board_state with
           w_queen = Int64.logxor new_move board_state.w_queen;
           all_whites = Int64.logxor new_move board_state.all_whites;
+          fifty_move = 0;
         }
     | "r" ->
         {
           board_state with
           w_rooks = Int64.logxor new_move board_state.w_rooks;
           all_whites = Int64.logxor new_move board_state.all_whites;
+          fifty_move = 0;
         }
     | "n" ->
         {
           board_state with
           w_knights = Int64.logxor new_move board_state.w_knights;
           all_whites = Int64.logxor new_move board_state.all_whites;
+          fifty_move = 0;
         }
     | "b" ->
         {
           board_state with
           w_bishops = Int64.logxor new_move board_state.w_bishops;
           all_whites = Int64.logxor new_move board_state.all_whites;
+          fifty_move = 0;
         }
     | "p" ->
         {
           board_state with
           w_pawns = Int64.logxor new_move board_state.w_pawns;
           all_whites = Int64.logxor new_move board_state.all_whites;
+          fifty_move = 0;
         }
     (* This king pattern match is only used to process checks. It is not
        actually A capturing move. This is called by detect_check *)
@@ -1334,6 +1352,7 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                     board_state.all_whites |> Int64.logxor old_move
                     |> Int64.logor new_move;
                   ep = Int64.zero;
+                  fifty_move = 0;
                 } )
             else
               let temp_board = process_capture board_state new_move in
@@ -1348,6 +1367,7 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                     board_state.all_whites |> Int64.logxor old_move
                     |> Int64.logor new_move;
                   ep = Int64.zero;
+                  fifty_move = 0;
                 } )
           else if Int64.(logand new_move board_state.all_whites = zero) then
             ( old_move,
@@ -1361,6 +1381,7 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                   board_state.all_blacks |> Int64.logxor old_move
                   |> Int64.logor new_move;
                 ep = Int64.zero;
+                fifty_move = 0;
               } )
           else
             let temp_board = process_capture board_state new_move in
@@ -1375,6 +1396,7 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                   board_state.all_blacks |> Int64.logxor old_move
                   |> Int64.logor new_move;
                 ep = Int64.zero;
+                fifty_move = 0;
               } )
       | "p_d" ->
           if board_state.w_turn then
@@ -1389,6 +1411,7 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                   board_state.all_whites |> Int64.logxor old_move
                   |> Int64.logor new_move;
                 ep = new_move;
+                fifty_move = 0;
               } )
           else
             ( old_move,
@@ -1402,6 +1425,7 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                   board_state.all_blacks |> Int64.logxor old_move
                   |> Int64.logor new_move;
                 ep = new_move;
+                fifty_move = 0;
               } )
       | "p_ep" ->
           if board_state.w_turn then
@@ -1422,6 +1446,7 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                   board_state.all_blacks
                   |> Int64.logxor (Int64.shift_right_logical new_move 8);
                 ep = Int64.zero;
+                fifty_move = 0;
               } )
           else
             ( old_move,
@@ -1441,6 +1466,7 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                   board_state.all_whites
                   |> Int64.logxor (Int64.shift_right_logical new_move 8);
                 ep = Int64.zero;
+                fifty_move = 0;
               } )
       | _ -> failwith "Piece Not Recognized")
 
@@ -1568,19 +1594,12 @@ let gen_promos board_state =
     board_state.w_turn @ moves_promote_no_cap board_state board_state.w_turn))
     in let _ = print_endline "" in*)
   let promos =
-    (let lst =
-       List.map
-         (fun move -> move_piece_board board_state move "p_s")
-         (moves_promote_cap board_state board_state.w_turn)
-     in
-     List.map (fun (om, nm, bs) -> (om, nm, detect_check bs)) lst)
-    @
-    let lst =
-      List.map
-        (fun move -> move_piece_board board_state move "p_s")
-        (moves_promote_no_cap board_state board_state.w_turn)
-    in
-    List.map (fun (om, nm, bs) -> (om, nm, detect_check bs)) lst
+    List.map
+      (fun move -> move_piece_board board_state move "p_s")
+      (moves_promote_cap board_state board_state.w_turn)
+    @ List.map
+      (fun move -> move_piece_board board_state move "p_s")
+      (moves_promote_no_cap board_state board_state.w_turn)
   in
   let all_promos =
     if board_state.w_turn then
@@ -1594,6 +1613,7 @@ let gen_promos board_state =
                 Int64.logxor om (Int64.logxor nm (Int64.logxor om bs.w_pawns));
               w_queen = Int64.logor nm bs.w_queen;
               all_whites = Int64.logor nm (Int64.logxor om bs.all_whites);
+              fifty_move = 0;
             } ))
         promos
       @ List.map
@@ -1606,6 +1626,7 @@ let gen_promos board_state =
                   Int64.logxor om (Int64.logxor nm (Int64.logxor om bs.w_pawns));
                 w_rooks = Int64.logor nm bs.w_rooks;
                 all_whites = Int64.logor nm (Int64.logxor om bs.all_whites);
+                fifty_move = 0;
               } ))
           promos
       @ List.map
@@ -1618,6 +1639,7 @@ let gen_promos board_state =
                   Int64.logxor om (Int64.logxor nm (Int64.logxor om bs.w_pawns));
                 w_bishops = Int64.logor nm bs.w_bishops;
                 all_whites = Int64.logor nm (Int64.logxor om bs.all_whites);
+                fifty_move = 0;
               } ))
           promos
       @ List.map
@@ -1630,6 +1652,7 @@ let gen_promos board_state =
                   Int64.logxor om (Int64.logxor nm (Int64.logxor om bs.w_pawns));
                 w_knights = Int64.logor nm bs.w_knights;
                 all_whites = Int64.logor nm (Int64.logxor om bs.all_whites);
+                fifty_move = 0;
               } ))
           promos
     else
@@ -1643,6 +1666,7 @@ let gen_promos board_state =
                 Int64.logxor om (Int64.logxor nm (Int64.logxor om bs.b_pawns));
               b_queen = Int64.logor nm bs.b_queen;
               all_blacks = Int64.logor nm (Int64.logxor om bs.all_blacks);
+              fifty_move = 0;
             } ))
         promos
       @ List.map
@@ -1655,6 +1679,7 @@ let gen_promos board_state =
                   Int64.logxor om (Int64.logxor nm (Int64.logxor om bs.b_pawns));
                 b_rooks = Int64.logor nm bs.b_rooks;
                 all_blacks = Int64.logor nm (Int64.logxor om bs.all_blacks);
+                fifty_move = 0;
               } ))
           promos
       @ List.map
@@ -1667,6 +1692,7 @@ let gen_promos board_state =
                   Int64.logxor om (Int64.logxor nm (Int64.logxor om bs.b_pawns));
                 b_bishops = Int64.logor nm bs.b_bishops;
                 all_blacks = Int64.logor nm (Int64.logxor om bs.all_blacks);
+                fifty_move = 0;
               } ))
           promos
       @ List.map
@@ -1679,15 +1705,12 @@ let gen_promos board_state =
                   Int64.logxor om (Int64.logxor nm (Int64.logxor om bs.b_pawns));
                 b_knights = Int64.logor nm bs.b_knights;
                 all_blacks = Int64.logor nm (Int64.logxor om bs.all_blacks);
+                fifty_move = 0;
               } ))
           promos
-  in
+  in List.map (fun (om, nm, bs) -> (om, nm, detect_check bs)) all_promos
   (*let _ = print_int (List.length all_promos) in*)
-  let a =
-    List.map (fun (om, nm, bs) -> (om, nm, detect_check bs)) all_promos
-    (* in let _ = List.map (fun (_, _, bs) -> print_board bs) a *)
-  in
-  a
+  (* in let _ = List.map (fun (_, _, bs) -> print_board bs) a *)
 
 let is_promo bs om nm =
   let last_file = Int64.shift_left Int64.minus_one 56 in
@@ -1801,8 +1824,29 @@ let process_piece cmd = raise (Failure "Unimplemented")
    corresponding to chosen move *)
 let rec_func (board_state : board_state) = raise (Failure "Unimplemented")
 
+let rec print_board_list = function
+| [] -> ()
+| h :: t -> print_board h; print_board_list t
+
+let cmp_boards bs1 bs2 = 
+  bs1.all_whites = bs2.all_whites &&
+  bs1.all_blacks = bs2.all_blacks &&
+  bs1.w_queen = bs2.w_queen &&
+  bs1.b_queen = bs2.b_queen &&
+  bs1.w_rooks = bs2.w_rooks &&
+  bs1.b_rooks = bs2.b_rooks &&
+  bs1.w_bishops = bs2.w_bishops &&
+  bs1.b_bishops = bs2.b_bishops &&
+  bs1.w_knights = bs2.w_knights &&
+  bs1.b_knights = bs2.b_knights &&
+  bs1.w_pawns = bs2.w_pawns &&
+  bs1.b_pawns = bs2.b_pawns &&
+  bs1.w_king = bs2.w_king &&
+  bs1.b_king = bs2.b_king
+
 let move bs cmd =
-  let _ = List.map (fun (_, _, b) -> print_board b) (pseudolegal_moves bs) in
+  (*let _ = List.map (fun (_, _, b) -> print_board b) (pseudolegal_moves
+    bs) in*)
   let move_set = all_legal_moves (pseudolegal_moves bs) in
 
   let s, e = process_square cmd in
@@ -1816,7 +1860,26 @@ let move bs cmd =
     List.filter (fun (a, b, _) -> s = a && e = b) move_set
   in
   if List.length valid_move_list < 1 then bs
-  else if not (is_promo bs s e) then
+  else 
+    (* Update move number *)
+    let valid_move_list = 
+    (match valid_move_list with 
+    | [] -> failwith "Error Valid Move List state.move" 
+    | (om, nm, b) :: t -> if (not b.w_turn) 
+      then (om, nm, {b with move_number = b.move_number + 1; 
+                    fifty_move = b.fifty_move + 1;
+                    prev_boards = b :: b.prev_boards}) :: t
+      else (om, nm, {b with fifty_move = b.fifty_move + 1;
+                    prev_boards = b :: b.prev_boards}) :: t) in
+
+    (*let _ = (match List.hd valid_move_list with
+    (_,_,b) -> print_int b.fifty_move) in*)
+    (*let _ = print_int (List.length bs.prev_boards) in*)
+    let _ = print_int (List.length (List.filter (fun b -> cmp_boards b bs) 
+          (bs.prev_boards))) in
+    (*let _ = print_board_list bs.prev_boards in*)
+
+    if not (is_promo bs s e) then
     let om, nm, next_board = List.hd valid_move_list in
     next_board
   else
@@ -1834,3 +1897,7 @@ let move bs cmd =
    b, _) -> (s, e) = (a, b)) move_set) in mb *)
 let get_val board_state = board_state.b_knights
 let get_turn board_state = if board_state.w_turn then "white" else "black"
+
+let get_fifty board_state = board_state.fifty_move
+
+let get_prev_boards board_state = board_state.prev_boards

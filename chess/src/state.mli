@@ -108,3 +108,14 @@ val move : board_state -> Command.t -> board_state
 val get_turn : board_state -> string
 (** gets the current mover of the board ("white" for white's turn, "black" for
     black's turn)*)
+
+val get_fifty : board_state -> int
+(** gets the number of moves played towards fifty-move rule *)
+
+val get_prev_boards : board_state -> board_state list
+(** gets all the previous board states (including) itself that have been played
+    used to determine repeated-move drawing *)
+
+val cmp_boards : board_state -> board_state -> bool
+(** Compares if the pieces on two boards are in the same place
+    used to determine repeated-move drawing *)
