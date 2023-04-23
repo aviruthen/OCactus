@@ -894,14 +894,14 @@ let list_or (bitmaps : (Int64.t * Int64.t) list) : Int64.t =
   List.fold_right Int64.logor bitmaps Int64.zero
 
 let enemy_attacks (board_state : board_state) : Int64.t =
-  (*let king_atk = list_or (moves_king board_state (not board_state.w_turn)) in
-    let queen_atk = list_or (moves_queen board_state (not board_state.w_turn))
-    in*)
+  let king_atk = list_or (moves_king board_state board_state.w_turn) in
+  let queen_atk = list_or (moves_queen board_state board_state.w_turn)
+    in
   let rook_atk = list_or (moves_rook board_state board_state.w_turn) in
   (*let _ = print_endline (Int64.to_string rook_atk) in*)
   let bishop_atk = list_or (moves_bishop board_state board_state.w_turn) in
   (*let _ = print_endline (Int64.to_string bishop_atk) in*)
-  (*let knight_atk = list_or (moves_knight board_state (not board_state.w_turn))
+  (*let knight_atk = list_or (moves_knight board_state board_state.w_turn)
     in*)
   let pawn_atk = list_or (moves_pawn_attacks board_state board_state.w_turn) in
   (*let _ = print_endline (Int64.to_string pawn_atk) in*)
@@ -909,7 +909,7 @@ let enemy_attacks (board_state : board_state) : Int64.t =
     list_or (moves_promote_cap board_state board_state.w_turn)
   in
   (*let _ = print_endline (Int64.to_string promote_atk) in*)
-  (*queen_atk |> Int64.logor king_atk |> Int64.logor *)
+  queen_atk |> Int64.logor king_atk |> Int64.logor
   rook_atk
   |> Int64.logor bishop_atk (*|> Int64.logor knight_atk*)
   |> Int64.logor pawn_atk |> Int64.logor promote_atk
