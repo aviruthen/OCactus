@@ -62,10 +62,10 @@ let init =
     in_check_b = false;
     move_number = 0;
     fifty_move = 0;
-    prev_boards = []
-}
+    prev_boards = [];
+  }
 
-let init_chess = {init with prev_boards = init :: init.prev_boards}
+let init_chess = { init with prev_boards = init :: init.prev_boards }
 
 (** list_range 10 [] returns [0; 1; 2; 3; 4; 5; 6; 7; 8; 9] *)
 let rec list_range range lst =
@@ -368,13 +368,13 @@ let rec move_queen_straight (board_state : board_state) (dir : string)
   (* if it hits own piece or goes above the board or it's 0 *)
   let new_q = queen_direction dir move_q in
   if
-    Int64.logand new_q all_player > 0L
-    || Int64.logand mask move_q = 1L
+    Int64.logand new_q all_player <> Int64.zero
+    || Int64.logand mask move_q <> Int64.zero
     || new_q = 0L
   then moves (* if it runs into opponent piece - takes the spot and stop *)
   else
     let move_pair = (stay_q, new_q) in
-    if Int64.logand new_q all_opponent > 0L then
+    if Int64.logand new_q all_opponent <> Int64.zero then
       move_pair :: moves (* it moves to an open spot *)
     else
       move_queen_straight board_state dir mask white_turn new_q stay_q
@@ -393,14 +393,14 @@ let rec move_queen_diag (board_state : board_state) (dir : string)
   (* if it hits own piece or goes above the board or it's 0 *)
   let new_q = queen_direction dir move_q in
   if
-    Int64.logand new_q all_player > 0L
-    || Int64.logand mask1 move_q = 1L
-    || Int64.logand mask2 move_q = 1L
+    Int64.logand new_q all_player <> Int64.zero
+    || Int64.logand mask1 move_q <> Int64.zero
+    || Int64.logand mask2 move_q <> Int64.zero
     || new_q = 0L
   then moves (* if it runs into opponent piece - takes the spot and stop *)
   else
     let move_pair = (stay_q, new_q) in
-    if Int64.logand new_q all_opponent > 0L then
+    if Int64.logand new_q all_opponent <> Int64.zero then
       move_pair :: moves (* it moves to an open spot *)
     else
       move_queen_diag board_state dir mask1 mask2 white_turn new_q stay_q
@@ -410,17 +410,17 @@ let rec all_directions_queen board_state white_turn lst =
   match lst with
   | [] -> []
   | r :: t ->
-      move_queen_diag board_state "up left" white_first_files a_file white_turn
-        r r []
+      move_queen_diag board_state "up left" white_last_file a_file white_turn r
+        r []
       @ move_queen_straight board_state "up" white_last_file white_turn r r []
-      @ move_queen_diag board_state "up right" white_first_files h_file
-          white_turn r r []
+      @ move_queen_diag board_state "up right" white_last_file h_file white_turn
+          r r []
       @ move_queen_straight board_state "left" a_file white_turn r r []
       @ move_queen_straight board_state "right" h_file white_turn r r []
-      @ move_queen_diag board_state "down left" black_first_files a_file
+      @ move_queen_diag board_state "down left" black_last_file a_file
           white_turn r r []
       @ move_queen_straight board_state "down" black_last_file white_turn r r []
-      @ move_queen_diag board_state "down right" black_first_files h_file
+      @ move_queen_diag board_state "down right" black_last_file h_file
           white_turn r r []
       @ all_directions_queen board_state white_turn t
 
@@ -461,13 +461,13 @@ let rec move_rook (board_state : board_state) (dir : string) (mask : Int64.t)
   (* if it hits own piece or goes above the board or it's 0 *)
   let new_r = rook_direction dir move_r in
   if
-    Int64.logand new_r all_player > 0L
-    || Int64.logand mask move_r = 1L
+    Int64.logand new_r all_player <> Int64.zero
+    || Int64.logand mask move_r <> Int64.zero
     || new_r = 0L
   then moves (* if it runs into opponent piece - takes the spot and stop *)
   else
     let move_pair = (stay_r, new_r) in
-    if Int64.logand new_r all_opponent > 0L then
+    if Int64.logand new_r all_opponent <> Int64.zero then
       move_pair :: moves (* it moves to an open spot *)
     else
       move_rook board_state dir mask white_turn new_r stay_r (move_pair :: moves)
@@ -1598,8 +1598,8 @@ let gen_promos board_state =
       (fun move -> move_piece_board board_state move "p_s")
       (moves_promote_cap board_state board_state.w_turn)
     @ List.map
-      (fun move -> move_piece_board board_state move "p_s")
-      (moves_promote_no_cap board_state board_state.w_turn)
+        (fun move -> move_piece_board board_state move "p_s")
+        (moves_promote_no_cap board_state board_state.w_turn)
   in
   let all_promos =
     if board_state.w_turn then
@@ -1708,9 +1708,10 @@ let gen_promos board_state =
                 fifty_move = 0;
               } ))
           promos
-  in List.map (fun (om, nm, bs) -> (om, nm, detect_check bs)) all_promos
-  (*let _ = print_int (List.length all_promos) in*)
-  (* in let _ = List.map (fun (_, _, bs) -> print_board bs) a *)
+  in
+  List.map (fun (om, nm, bs) -> (om, nm, detect_check bs)) all_promos
+(*let _ = print_int (List.length all_promos) in*)
+(* in let _ = List.map (fun (_, _, bs) -> print_board bs) a *)
 
 let is_promo bs om nm =
   let last_file = Int64.shift_left Int64.minus_one 56 in
@@ -1825,28 +1826,26 @@ let process_piece cmd = raise (Failure "Unimplemented")
 let rec_func (board_state : board_state) = raise (Failure "Unimplemented")
 
 let rec print_board_list = function
-| [] -> ()
-| h :: t -> print_board h; print_board_list t
+  | [] -> ()
+  | h :: t ->
+      print_board h;
+      print_board_list t
 
-let cmp_boards bs1 bs2 = 
-  bs1.all_whites = bs2.all_whites &&
-  bs1.all_blacks = bs2.all_blacks &&
-  bs1.w_queen = bs2.w_queen &&
-  bs1.b_queen = bs2.b_queen &&
-  bs1.w_rooks = bs2.w_rooks &&
-  bs1.b_rooks = bs2.b_rooks &&
-  bs1.w_bishops = bs2.w_bishops &&
-  bs1.b_bishops = bs2.b_bishops &&
-  bs1.w_knights = bs2.w_knights &&
-  bs1.b_knights = bs2.b_knights &&
-  bs1.w_pawns = bs2.w_pawns &&
-  bs1.b_pawns = bs2.b_pawns &&
-  bs1.w_king = bs2.w_king &&
-  bs1.b_king = bs2.b_king
+let cmp_boards bs1 bs2 =
+  bs1.all_whites = bs2.all_whites
+  && bs1.all_blacks = bs2.all_blacks
+  && bs1.w_queen = bs2.w_queen && bs1.b_queen = bs2.b_queen
+  && bs1.w_rooks = bs2.w_rooks && bs1.b_rooks = bs2.b_rooks
+  && bs1.w_bishops = bs2.w_bishops
+  && bs1.b_bishops = bs2.b_bishops
+  && bs1.w_knights = bs2.w_knights
+  && bs1.b_knights = bs2.b_knights
+  && bs1.w_pawns = bs2.w_pawns && bs1.b_pawns = bs2.b_pawns
+  && bs1.w_king = bs2.w_king && bs1.b_king = bs2.b_king
 
 let move bs cmd =
-  (*let _ = List.map (fun (_, _, b) -> print_board b) (pseudolegal_moves
-    bs) in*)
+  (*let _ = List.map (fun (_, _, b) -> print_board b) (pseudolegal_moves bs)
+    in*)
   let move_set = all_legal_moves (pseudolegal_moves bs) in
 
   let s, e = process_square cmd in
@@ -1860,31 +1859,48 @@ let move bs cmd =
     List.filter (fun (a, b, _) -> s = a && e = b) move_set
   in
   if List.length valid_move_list < 1 then bs
-  else 
-    (* Update move number *)
-    let valid_move_list = 
-    (match valid_move_list with 
-    | [] -> failwith "Error Valid Move List state.move" 
-    | (om, nm, b) :: t -> if (not b.w_turn) 
-      then (om, nm, {b with move_number = b.move_number + 1; 
-                    fifty_move = b.fifty_move + 1;
-                    prev_boards = b :: b.prev_boards}) :: t
-      else (om, nm, {b with fifty_move = b.fifty_move + 1;
-                    prev_boards = b :: b.prev_boards}) :: t) in
-
-    (*let _ = (match List.hd valid_move_list with
-    (_,_,b) -> print_int b.fifty_move) in*)
-    (*let _ = print_int (List.length bs.prev_boards) in*)
-    let _ = print_int (List.length (List.filter (fun b -> cmp_boards b bs) 
-          (bs.prev_boards))) in
-    (*let _ = print_board_list bs.prev_boards in*)
-
-    if not (is_promo bs s e) then
-    let om, nm, next_board = List.hd valid_move_list in
-    next_board
   else
-    let _, _, nb_promo = List.hd (promo_move valid_move_list bs.w_turn) in
-    nb_promo
+    (* Update move number *)
+    let valid_move_list =
+      match valid_move_list with
+      | [] -> failwith "Error Valid Move List state.move"
+      | (om, nm, b) :: t ->
+          if not b.w_turn then
+            ( om,
+              nm,
+              {
+                b with
+                move_number = b.move_number + 1;
+                fifty_move = b.fifty_move + 1;
+                prev_boards = b :: b.prev_boards;
+              } )
+            :: t
+          else
+            ( om,
+              nm,
+              {
+                b with
+                fifty_move = b.fifty_move + 1;
+                prev_boards = b :: b.prev_boards;
+              } )
+            :: t
+    in
+
+    (*let _ = (match List.hd valid_move_list with (_,_,b) -> print_int
+      b.fifty_move) in*)
+    (*let _ = print_int (List.length bs.prev_boards) in*)
+    let _ =
+      print_int
+        (List.length (List.filter (fun b -> cmp_boards b bs) bs.prev_boards))
+    in
+
+    (*let _ = print_board_list bs.prev_boards in*)
+    if not (is_promo bs s e) then
+      let om, nm, next_board = List.hd valid_move_list in
+      next_board
+    else
+      let _, _, nb_promo = List.hd (promo_move valid_move_list bs.w_turn) in
+      nb_promo
 
 (*let _ = print_endline (string_of_bool (is_promo om nm bs next_board)) in *)
 (*let _, _, board = if List.length (gen_promos bs) = 0 then (Int64.zero,
@@ -1897,7 +1913,5 @@ let move bs cmd =
    b, _) -> (s, e) = (a, b)) move_set) in mb *)
 let get_val board_state = board_state.b_knights
 let get_turn board_state = if board_state.w_turn then "white" else "black"
-
 let get_fifty board_state = board_state.fifty_move
-
 let get_prev_boards board_state = board_state.prev_boards
