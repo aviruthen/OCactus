@@ -901,8 +901,8 @@ let enemy_attacks (board_state : board_state) : Int64.t =
   (*let _ = print_endline (Int64.to_string rook_atk) in*)
   let bishop_atk = list_or (moves_bishop board_state board_state.w_turn) in
   (*let _ = print_endline (Int64.to_string bishop_atk) in*)
-  (*let knight_atk = list_or (moves_knight board_state board_state.w_turn)
-    in*)
+  let knight_atk = list_or (moves_knight board_state board_state.w_turn)
+    in
   let pawn_atk = list_or (moves_pawn_attacks board_state board_state.w_turn) in
   (*let _ = print_endline (Int64.to_string pawn_atk) in*)
   let promote_atk =
@@ -911,7 +911,7 @@ let enemy_attacks (board_state : board_state) : Int64.t =
   (*let _ = print_endline (Int64.to_string promote_atk) in*)
   queen_atk |> Int64.logor king_atk |> Int64.logor
   rook_atk
-  |> Int64.logor bishop_atk (*|> Int64.logor knight_atk*)
+  |> Int64.logor bishop_atk |> Int64.logor knight_atk
   |> Int64.logor pawn_atk |> Int64.logor promote_atk
 
 (********************************************************)
@@ -1772,9 +1772,9 @@ let process_piece cmd = raise (Failure "Unimplemented")
 let rec_func (board_state : board_state) = raise (Failure "Unimplemented")
 
 let move bs cmd =
-  (*let _ = List.map (fun (_, _, b) -> print_board b) (pseudolegal_moves_pawns
-    bs) in*)
-  let move_set = all_legal_moves (pseudolegal_moves_pawns bs) in
+  let _ = List.map (fun (_, _, b) -> print_board b) (pseudolegal_moves
+    bs) in
+  let move_set = all_legal_moves (pseudolegal_moves bs) in
 
   let s, e = process_square cmd in
   (*let _ = print_string (Int64.to_string s ^ " " ^ Int64.to_string e ^ "\n") in *)
