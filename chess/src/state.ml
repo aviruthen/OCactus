@@ -545,8 +545,9 @@ let moves_knight (board_state : board_state) (white_turn : bool) :
     if white_turn then bit_loop_iter board_state.w_knights
     else bit_loop_iter board_state.b_knights
   in
-  let not_occupied =
-    Int64.lognot (Int64.logor board_state.all_whites board_state.all_blacks)
+  let not_occupied = if white_turn then 
+    Int64.lognot board_state.all_whites
+    else Int64.lognot board_state.all_blacks
   in
   let up2_left1_moves =
     List.map
@@ -942,6 +943,7 @@ let enemy_attacks (board_state : board_state) : Int64.t =
   let bishop_atk = list_or (moves_bishop board_state board_state.w_turn) in
   (*let _ = print_endline (Int64.to_string bishop_atk) in*)
   let knight_atk = list_or (moves_knight board_state board_state.w_turn) in
+  (*let _ = print_endline (Int64.to_string knight_atk) in*)
   let pawn_atk = list_or (moves_pawn_attacks board_state board_state.w_turn) in
   (*let _ = print_endline (Int64.to_string pawn_atk) in*)
   let promote_atk =
@@ -1859,6 +1861,28 @@ let move bs cmd =
     List.filter (fun (a, b, _) -> s = a && e = b) move_set
   in
   if List.length valid_move_list < 1 then bs
+  else 
+    (* Update move number *)
+    let valid_move_list = 
+    (match valid_move_list with 
+    | [] -> failwith "Error Valid Move List state.move" 
+    | (om, nm, b) :: t -> if (not b.w_turn) 
+      then (om, nm, {b with move_number = b.move_number + 1; 
+                    fifty_move = b.fifty_move + 1;
+                    prev_boards = b :: b.prev_boards}) :: t
+      else (om, nm, {b with fifty_move = b.fifty_move + 1;
+                    prev_boards = b :: b.prev_boards}) :: t) in
+
+    (*let _ = (match List.hd valid_move_list with
+    (_,_,b) -> print_int b.fifty_move) in*)
+    (*let _ = print_int (List.length bs.prev_boards) in*)
+    (*let _ = print_int (List.length (List.filter (fun b -> cmp_boards b bs) 
+          (bs.prev_boards))) in*)
+    (*let _ = print_board_list bs.prev_boards in*)
+
+    if not (is_promo bs s e) then
+    let om, nm, next_board = List.hd valid_move_list in
+    next_board
   else
     (* Update move number *)
     let valid_move_list =
@@ -1889,10 +1913,10 @@ let move bs cmd =
     (*let _ = (match List.hd valid_move_list with (_,_,b) -> print_int
       b.fifty_move) in*)
     (*let _ = print_int (List.length bs.prev_boards) in*)
-    let _ =
+    (*let _ =
       print_int
         (List.length (List.filter (fun b -> cmp_boards b bs) bs.prev_boards))
-    in
+    in*)
 
     (*let _ = print_board_list bs.prev_boards in*)
     if not (is_promo bs s e) then
@@ -1915,3 +1939,5 @@ let get_val board_state = board_state.b_knights
 let get_turn board_state = if board_state.w_turn then "white" else "black"
 let get_fifty board_state = board_state.fifty_move
 let get_prev_boards board_state = board_state.prev_boards
+
+let in_check bs = if (bs.w_turn) then bs.in_check_w else bs.in_check_b

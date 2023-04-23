@@ -60,8 +60,12 @@ let rec move_game mv bs =
           "Thank you for playing chess!\n\n";
           endgame ()
         else
-
-
+        
+        let _ = 
+        (if State.in_check nbs && (State.get_turn nbs = "white") then 
+          ANSITerminal.print_string [ ANSITerminal.red ] "White in Check!\n"
+        else if State.in_check nbs && (State.get_turn nbs = "black") then 
+          ANSITerminal.print_string [ ANSITerminal.red ] "Black in Check!\n" else ()) in
         Stdlib.print_string ("Nice, enter a move (for " ^ get_turn nbs ^ "): ");
         move_game (String.trim (read_line ())) nbs)
 

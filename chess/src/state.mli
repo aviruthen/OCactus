@@ -119,3 +119,6 @@ val get_prev_boards : board_state -> board_state list
 val cmp_boards : board_state -> board_state -> bool
 (** Compares if the pieces on two boards are in the same place
     used to determine repeated-move drawing *)
+
+val in_check : board_state -> bool
+(** Determines if player is in check *)
