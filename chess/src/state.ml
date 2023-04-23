@@ -537,52 +537,94 @@ let moves_knight (board_state : board_state) (white_turn : bool) :
     if white_turn then bit_loop_iter board_state.w_knights
     else bit_loop_iter board_state.b_knights
   in
+  let not_occupied =
+    Int64.lognot (Int64.logor board_state.all_whites board_state.all_blacks)
+  in
   let up2_left1_moves =
-    List.map (fun pos -> (pos, List.assoc_opt pos up2_left1)) knight_pos
+    List.map
+      (fun pos ->
+        ( pos,
+          match List.assoc_opt pos up2_left1 with
+          | Some bitboard -> Int64.logand not_occupied bitboard
+          | None -> Int64.zero ))
+      knight_pos
   in
   let up1_left2_moves =
-    List.map (fun pos -> (pos, List.assoc_opt pos up1_left2)) knight_pos
+    List.map
+      (fun pos ->
+        ( pos,
+          match List.assoc_opt pos up1_left2 with
+          | Some bitboard -> Int64.logand not_occupied bitboard
+          | None -> Int64.zero ))
+      knight_pos
   in
   let up2_right1_moves =
-    List.map (fun pos -> (pos, List.assoc_opt pos up2_right1)) knight_pos
+    List.map
+      (fun pos ->
+        ( pos,
+          match List.assoc_opt pos up2_right1 with
+          | Some bitboard -> Int64.logand not_occupied bitboard
+          | None -> Int64.zero ))
+      knight_pos
   in
   let up1_right2_moves =
-    List.map (fun pos -> (pos, List.assoc_opt pos up1_right2)) knight_pos
+    List.map
+      (fun pos ->
+        ( pos,
+          match List.assoc_opt pos up1_right2 with
+          | Some bitboard -> Int64.logand not_occupied bitboard
+          | None -> Int64.zero ))
+      knight_pos
   in
   let down2_left1_moves =
-    List.map (fun pos -> (pos, List.assoc_opt pos down2_left1)) knight_pos
+    List.map
+      (fun pos ->
+        ( pos,
+          match List.assoc_opt pos down2_left1 with
+          | Some bitboard -> Int64.logand not_occupied bitboard
+          | None -> Int64.zero ))
+      knight_pos
   in
   let down1_left2_moves =
-    List.map (fun pos -> (pos, List.assoc_opt pos down1_left2)) knight_pos
+    List.map
+      (fun pos ->
+        ( pos,
+          match List.assoc_opt pos down1_left2 with
+          | Some bitboard -> Int64.logand not_occupied bitboard
+          | None -> Int64.zero ))
+      knight_pos
   in
   let down2_right1_moves =
-    List.map (fun pos -> (pos, List.assoc_opt pos down2_right1)) knight_pos
+    List.map
+      (fun pos ->
+        ( pos,
+          match List.assoc_opt pos down2_right1 with
+          | Some bitboard -> Int64.logand not_occupied bitboard
+          | None -> Int64.zero ))
+      knight_pos
   in
   let down1_right2_moves =
-    List.map (fun pos -> (pos, List.assoc_opt pos down1_right2)) knight_pos
+    List.map
+      (fun pos ->
+        ( pos,
+          match List.assoc_opt pos down1_right2 with
+          | Some bitboard -> Int64.logand not_occupied bitboard
+          | None -> Int64.zero ))
+      knight_pos
   in
-  List.map
-    (fun tup ->
-      ( fst tup,
-        match snd tup with
-        | Some b -> b
-        | None -> failwith "impossible" ))
-    (List.filter
-       (fun tup ->
-         match snd tup with
-         | Some _ -> true
-         | None -> false)
-       (List.flatten
-          [
-            up2_left1_moves;
-            up1_left2_moves;
-            up2_right1_moves;
-            up1_right2_moves;
-            down2_left1_moves;
-            down1_left2_moves;
-            down2_right1_moves;
-            down1_right2_moves;
-          ]))
+  List.filter
+    (fun tup -> if snd tup = Int64.zero then false else true)
+    (List.flatten
+       [
+         up2_left1_moves;
+         up1_left2_moves;
+         up2_right1_moves;
+         up1_right2_moves;
+         down2_left1_moves;
+         down1_left2_moves;
+         down2_right1_moves;
+         down1_right2_moves;
+       ])
 
 (********************************************************)
 (*                                                      *)
@@ -886,24 +928,21 @@ let list_or (bitmaps : (Int64.t * Int64.t) list) : Int64.t =
 
 let enemy_attacks (board_state : board_state) : Int64.t =
   let king_atk = list_or (moves_king board_state board_state.w_turn) in
-  let queen_atk = list_or (moves_queen board_state board_state.w_turn)
-    in
+  let queen_atk = list_or (moves_queen board_state board_state.w_turn) in
   let rook_atk = list_or (moves_rook board_state board_state.w_turn) in
   (*let _ = print_endline (Int64.to_string rook_atk) in*)
   let bishop_atk = list_or (moves_bishop board_state board_state.w_turn) in
   (*let _ = print_endline (Int64.to_string bishop_atk) in*)
-  let knight_atk = list_or (moves_knight board_state board_state.w_turn)
-    in
+  let knight_atk = list_or (moves_knight board_state board_state.w_turn) in
   let pawn_atk = list_or (moves_pawn_attacks board_state board_state.w_turn) in
   (*let _ = print_endline (Int64.to_string pawn_atk) in*)
   let promote_atk =
     list_or (moves_promote_cap board_state board_state.w_turn)
   in
   (*let _ = print_endline (Int64.to_string promote_atk) in*)
-  queen_atk |> Int64.logor king_atk |> Int64.logor
-  rook_atk
-  |> Int64.logor bishop_atk |> Int64.logor knight_atk
-  |> Int64.logor pawn_atk |> Int64.logor promote_atk
+  queen_atk |> Int64.logor king_atk |> Int64.logor rook_atk
+  |> Int64.logor bishop_atk |> Int64.logor knight_atk |> Int64.logor pawn_atk
+  |> Int64.logor promote_atk
 
 (********************************************************)
 (*                                                      *)
@@ -1763,8 +1802,7 @@ let process_piece cmd = raise (Failure "Unimplemented")
 let rec_func (board_state : board_state) = raise (Failure "Unimplemented")
 
 let move bs cmd =
-  let _ = List.map (fun (_, _, b) -> print_board b) (pseudolegal_moves
-    bs) in
+  let _ = List.map (fun (_, _, b) -> print_board b) (pseudolegal_moves bs) in
   let move_set = all_legal_moves (pseudolegal_moves bs) in
 
   let s, e = process_square cmd in
