@@ -407,17 +407,8 @@ let moves_rook (board_state : board_state) (white_turn : bool) :
 (*                                                      *)
 (*                                                      *)
 (********************************************************)
-let filter_up2_left1 =
-  Int64.logxor
-    (Int64.shift_left Int64.minus_one 16)
-    (Int64.of_nativeint 141289400074368n)
-
-let filter_up1_left2 =
-  Int64.logxor
-    (Int64.shift_left Int64.minus_one 16)
-    (Int64.logor
-       (Int64.of_nativeint 4665941148055945408n)
-       (Int64.shift_left Int64.one 63))
+let filter_up2_left1 = Int64.of_nativeint 140185576636287n
+let filter_up1_left2 = Int64.of_nativeint 17802464409370431n
 
 let up2_left1 =
   List.map
