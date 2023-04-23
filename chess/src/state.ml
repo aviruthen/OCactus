@@ -272,8 +272,9 @@ let list_join_iter list1 list2 = list_join list1 list2 []
 (*                                                      *)
 (********************************************************)
 
-let possible_squares (king_state : Int64.t) : (Int64.t * Int64.t) list =
-  let f =
+let pk_squares (king_state : Int64.t) (piece_color : Int64.t) : 
+(Int64.t * Int64.t) list =
+  let possibles =
     [
       (king_state, Int64.shift_right_logical king_state 9);
       (king_state, Int64.shift_right_logical king_state 8);
@@ -285,25 +286,20 @@ let possible_squares (king_state : Int64.t) : (Int64.t * Int64.t) list =
       (king_state, Int64.shift_left king_state 9);
     ]
   in
-  f
+  let rec get_col (inp : Int64.t) : Int64.t = 
+    if inp <= 128L then inp else get_col (Int64.shift_right_logical inp 8)
+  in
+  List.filter
+      (fun (a, b) ->
+        b <> 0L && (Int64.(logxor piece_color b |> logand b) = b) && 
+        (get_col a <> 128L || get_col b <> 1L) && 
+        (get_col a <> 1L || get_col b <> 128L)) possibles
 
 (* simply just gonna look at the eight squares a king can go to *)
 let moves_king (board_state : board_state) (white_turn : bool) :
     (Int64.t * Int64.t) list =
-  let possibles =
-    if white_turn then possible_squares board_state.w_king
-    else possible_squares board_state.b_king
-  in
-  if white_turn then
-    List.filter
-      (fun (_, b) ->
-        b <> 0L && Int64.(logxor board_state.all_whites b |> logand b) = b)
-      possibles
-  else
-    List.filter
-      (fun (_, b) ->
-        b <> 0L && Int64.(logxor board_state.all_blacks b |> logand b) = b)
-      possibles
+  if white_turn then pk_squares board_state.w_king board_state.all_whites
+    else pk_squares board_state.b_king board_state.all_blacks
 
 let moves_kingcastle (board_state : board_state) (white_turn : bool) :
     (Int64.t * Int64.t) list =
