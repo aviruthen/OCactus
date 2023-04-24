@@ -53,10 +53,13 @@ let init =
     all_whites = Int64.(shift_right_logical minus_one 48);
     all_blacks = Int64.(logxor minus_one (shift_right_logical minus_one 16));
     ep = Int64.zero;
-    b_castle_l = false;
-    b_castle_r = false;
-    w_castle_l = false;
-    w_castle_r = false;
+    (* w/b castle l/r indicates black and white's ability to castle 
+       left or right. 
+       true indicates that they can castle to that side. false otherwise *)
+    b_castle_l = true;
+    b_castle_r = true;
+    w_castle_l = true;
+    w_castle_r = true;
     w_turn = true;
     in_check_w = false;
     in_check_b = false;
@@ -310,10 +313,6 @@ let moves_king (board_state : board_state) (white_turn : bool) :
     (Int64.t * Int64.t) list =
   if white_turn then pk_squares board_state.w_king board_state.all_whites
   else pk_squares board_state.b_king board_state.all_blacks
-
-let moves_kingcastle (board_state : board_state) (white_turn : bool) :
-    (Int64.t * Int64.t) list =
-  raise (Failure "Unimplemented")
 
 (********************************************************)
 (*                                                      *)
@@ -954,6 +953,103 @@ let enemy_attacks (board_state : board_state) : Int64.t =
   |> Int64.logor bishop_atk |> Int64.logor knight_atk |> Int64.logor pawn_atk
   |> Int64.logor promote_atk
 
+
+(********************************************************)
+(*                                                       *)
+(*                                                       *)
+(*                                                       *)
+(*                   !!CASTLING!!                        *)
+(*            (has to be after movement checking         *)
+(*             to ensure no castling thru check)         *)
+(*                                                       *)
+(*                                                       *)
+(*********************************************************)
+(* we assume that the castle is possible to begin with: 
+   i.e. w/b_castle_l/r is true *)
+   let execute_castle (board_state : board_state)
+   (castle_side : string) : (Int64.t * Int64.t) option = 
+   match castle_side with
+   | "wl" -> let black_attacks = {board_state with w_turn = false} in
+     if board_state.w_castle_l &&
+      (Int64.logand board_state.all_whites 64L) = 0L && 
+     (Int64.logand board_state.all_whites 32L) = 0L && 
+     (Int64.logand board_state.all_whites 16L) = 0L &&
+     (Int64.logand board_state.all_blacks 64L) = 0L && 
+     (Int64.logand board_state.all_blacks 32L) = 0L &&
+     (Int64.logand board_state.all_blacks 16L) = 0L && 
+     (Int64.logand (enemy_attacks black_attacks) 32L) = 0L &&
+     (Int64.logand (enemy_attacks black_attacks) 16L) = 0L
+     then 
+       let new_king = 32L in
+       let new_state = (board_state.w_king, new_king) in
+       Some new_state
+     else None
+   | "wr" -> let black_attacks = {board_state with w_turn = false} in
+     if board_state.w_castle_r &&
+      (Int64.logand board_state.all_whites 2L) = 0L && 
+     (Int64.logand board_state.all_whites 2L) = 0L && 
+     (Int64.logand board_state.all_blacks 4L) = 0L && 
+     (Int64.logand board_state.all_blacks 4L) = 0L &&
+     (Int64.logand (enemy_attacks black_attacks) 2L) = 0L &&
+     (Int64.logand (enemy_attacks black_attacks) 4L) = 0L
+     then 
+       let new_king = 2L in
+       let new_state = (board_state.w_king, new_king) in
+       Some new_state
+     else None
+   | "bl" -> let white_attacks = {board_state with w_turn = true} in
+     if board_state.b_castle_l &&
+      (Int64.logand board_state.all_whites (Int64.shift_left 64L 56)) = 0L && 
+     (Int64.logand board_state.all_whites (Int64.shift_left 32L 56)) = 0L && 
+     (Int64.logand board_state.all_blacks (Int64.shift_left 64L 56)) = 0L && 
+     (Int64.logand board_state.all_blacks (Int64.shift_left 32L 56)) = 0L &&
+     (Int64.logand board_state.all_whites (Int64.shift_left 16L 56)) = 0L &&
+     (Int64.logand board_state.all_blacks (Int64.shift_left 16L 56)) = 0L &&
+     (Int64.logand (enemy_attacks white_attacks) 
+      (Int64.shift_left 32L 56)) = 0L &&
+     (Int64.logand (enemy_attacks white_attacks)
+      (Int64.shift_left 16L 56)) = 0L
+     then 
+       let new_king = (Int64.shift_left 32L 56) in
+       let new_state = (board_state.b_king, new_king) in
+       Some new_state
+     else None
+   | "br" -> let white_attacks = {board_state with w_turn = true} in
+     if board_state.b_castle_r &&
+      (Int64.logand board_state.all_whites (Int64.shift_left 2L 56)) = 0L && 
+     (Int64.logand board_state.all_whites (Int64.shift_left 2L 56)) = 0L && 
+     (Int64.logand board_state.all_blacks (Int64.shift_left 4L 56)) = 0L && 
+     (Int64.logand board_state.all_blacks (Int64.shift_left 4L 56)) = 0L &&
+     (Int64.logand (enemy_attacks white_attacks) 
+     (Int64.shift_left 2L 56)) = 0L &&
+     (Int64.logand (enemy_attacks white_attacks) 
+     (Int64.shift_left 4L 56)) = 0L then 
+       let new_king = (Int64.shift_left 2L 56) in
+       let new_state = (board_state.b_king, new_king) in
+       Some new_state
+     else None
+   | _ -> raise (Failure "inputs should be of the form 'wl', 'wr', 'bl', br' ")
+ 
+       
+ (* can't castle out of check, can't castle into check (handled elsewhere), 
+    and can't castle thru check  *)
+ let moves_kingcastle (board_state : board_state) (white_turn : bool) :
+     (Int64.t * Int64.t) list =
+     if white_turn && (not board_state.in_check_w) then 
+       match (execute_castle board_state "wl", 
+     execute_castle board_state "wr") with
+       | (Some x, Some y) -> [x; y]
+       | (Some x, None) | (None, Some x) -> [x]
+       | (None, None) -> []
+     else if (not white_turn) && (not board_state.in_check_b) then
+       match (execute_castle board_state "bl", 
+       execute_castle board_state "br") with
+       | (Some x, Some y) -> [x; y]
+       | (Some x, None) | (None, Some x) -> [x]
+       | (None, None) -> []
+     else []
+ 
+
 (********************************************************)
 (*                                                      *)
 (*                                                      *)
@@ -1080,6 +1176,8 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                     board_state.all_whites |> Int64.logxor old_move
                     |> Int64.logor new_move;
                   ep = Int64.zero;
+                  w_castle_l = false;
+                  w_castle_r = false;
                 } )
             else
               let temp_board = process_capture board_state new_move in
@@ -1092,6 +1190,8 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                     board_state.all_whites |> Int64.logxor old_move
                     |> Int64.logor new_move;
                   ep = Int64.zero;
+                  w_castle_l = false;
+                  w_castle_r = false;
                 } )
           else if Int64.(logand new_move board_state.all_whites = zero) then
             ( old_move,
@@ -1103,6 +1203,8 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                   board_state.all_blacks |> Int64.logxor old_move
                   |> Int64.logor new_move;
                 ep = Int64.zero;
+                b_castle_l = false;
+                b_castle_r = false;
               } )
           else
             let temp_board = process_capture board_state new_move in
@@ -1115,7 +1217,58 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                   board_state.all_blacks |> Int64.logxor old_move
                   |> Int64.logor new_move;
                 ep = Int64.zero;
+                b_castle_l = false;
+                b_castle_r = false;
               } )
+      | "castle" ->
+          if board_state.w_turn then
+            (
+              old_move, new_move,
+              {
+                board_state with
+                w_king = new_move;
+                w_rooks = if new_move = 32L then 
+                  Int64.logxor (Int64.logor board_state.w_rooks 16L) 128L else
+                  Int64.logxor (Int64.logor board_state.w_rooks 4L) 1L;
+                all_whites =
+                  if new_move = 32L then
+                    (board_state.all_whites |> Int64.logxor 136L 
+                    |> Int64.logor 48L) 
+                  else
+                    (board_state.all_whites |> Int64.logxor 9L 
+                    |> Int64.logor 6L); 
+                ep = Int64.zero;
+                w_castle_l = false;
+                w_castle_r = false;
+              }
+            )
+          else
+            (
+              old_move, new_move,
+              {
+                board_state with
+                b_king = new_move;
+                b_rooks = 
+                  if new_move = (Int64.shift_left 32L 56) then 
+                    Int64.logxor (Int64.logor board_state.b_rooks 
+                    (Int64.shift_left 16L 56)) (Int64.shift_left 128L 56) 
+                  else
+                    Int64.logxor (Int64.logor board_state.b_rooks 
+                    (Int64.shift_left 4L 56)) (Int64.shift_left 1L 56);
+                all_blacks =
+                  if new_move = (Int64.shift_left 32L 56) then
+                    (board_state.all_blacks 
+                    |> Int64.logxor (Int64.shift_left 136L 56) 
+                    |> Int64.logor (Int64.shift_left 48L 56)) 
+                  else
+                    (board_state.all_blacks 
+                    |> Int64.logxor (Int64.shift_left 9L 56) 
+                    |> Int64.logor (Int64.shift_left 6L 56));
+                ep = Int64.zero;
+                b_castle_l = false;
+                b_castle_r = false;
+              }
+            )
       | "q" ->
           if board_state.w_turn then
             if Int64.(logand new_move board_state.all_blacks = zero) then
@@ -1179,6 +1332,20 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                 new_move,
                 {
                   board_state with
+                  w_castle_r = 
+                  if (Int64.logand 1L board_state.w_rooks = 1L && 
+                    Int64.logand 1L 
+                  (board_state.w_rooks |> Int64.logxor old_move
+                  |> Int64.logor new_move) = 0L)
+                  then false
+                  else board_state.w_castle_r;
+                  w_castle_l = 
+                  if (Int64.logand 128L board_state.w_rooks = 128L && 
+                    Int64.logand 128L 
+                  (board_state.w_rooks |> Int64.logxor old_move
+                  |> Int64.logor new_move) = 0L)
+                    then false
+                  else board_state.w_castle_l;
                   w_rooks =
                     board_state.w_rooks |> Int64.logxor old_move
                     |> Int64.logor new_move;
@@ -1193,6 +1360,20 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                 new_move,
                 {
                   temp_board with
+                  w_castle_r = 
+                  if (Int64.logand 1L board_state.w_rooks = 1L && 
+                    Int64.logand 1L 
+                  (board_state.w_rooks |> Int64.logxor old_move
+                  |> Int64.logor new_move) = 0L)
+                  then (print_endline "HERE1"; false)
+                  else board_state.w_castle_r;
+                  w_castle_l = 
+                  if (Int64.logand 128L board_state.w_rooks = 128L && 
+                    Int64.logand 128L 
+                  (board_state.w_rooks |> Int64.logxor old_move
+                  |> Int64.logor new_move) = 0L)
+                    then (print_endline "HERE"; false)
+                  else board_state.w_castle_l;
                   w_rooks =
                     board_state.w_rooks |> Int64.logxor old_move
                     |> Int64.logor new_move;
@@ -1206,6 +1387,20 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
               new_move,
               {
                 board_state with
+                b_castle_r = 
+                if(Int64.logand (Int64.shift_left 1L 56) board_state.b_rooks = 
+                  (Int64.shift_left 1L 56) && 
+                  Int64.logand (Int64.shift_left 1L 56) (board_state.b_rooks 
+                  |> Int64.logxor old_move |> Int64.logor new_move) = 0L)
+                  then false
+                else board_state.b_castle_r;
+                b_castle_l = 
+                if (Int64.logand (Int64.shift_left 128L 56) 
+                  board_state.b_rooks = (Int64.shift_left 128L 56) && 
+                  Int64.logand (Int64.shift_left 128L 56) (board_state.b_rooks 
+                  |> Int64.logxor old_move |> Int64.logor new_move) = 0L)
+                  then false
+                else board_state.b_castle_l;
                 b_rooks =
                   board_state.b_rooks |> Int64.logxor old_move
                   |> Int64.logor new_move;
@@ -1220,6 +1415,20 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
               new_move,
               {
                 temp_board with
+                b_castle_r = 
+                if(Int64.logand (Int64.shift_left 1L 56) board_state.b_rooks = 
+                  (Int64.shift_left 1L 56) && 
+                  Int64.logand (Int64.shift_left 1L 56) (board_state.b_rooks 
+                  |> Int64.logxor old_move |> Int64.logor new_move) = 0L)
+                  then false
+                else board_state.b_castle_r;
+                b_castle_l = 
+                if (Int64.logand (Int64.shift_left 128L 56) 
+                  board_state.b_rooks = (Int64.shift_left 128L 56) && 
+                  Int64.logand (Int64.shift_left 128L 56) (board_state.b_rooks 
+                  |> Int64.logxor old_move |> Int64.logor new_move) = 0L)
+                  then false
+                else board_state.b_castle_l;
                 b_rooks =
                   board_state.b_rooks |> Int64.logxor old_move
                   |> Int64.logor new_move;
@@ -1479,6 +1688,7 @@ let piece_movement = function
   | "n" -> moves_knight
   | "b" -> moves_bishop
   | "k" -> moves_king
+  | "castle" -> moves_kingcastle
   | _ -> failwith "Bad Move Call in get_piece_move"
 
 let detect_check board_state =
@@ -1732,6 +1942,9 @@ let pseudolegal_moves (board_state : board_state) :
       (fun move -> move_piece_board board_state move "k")
       (moves_king board_state board_state.w_turn)
     @ List.map
+      (fun move -> move_piece_board board_state move "castle")
+      (moves_kingcastle board_state board_state.w_turn)
+    @ List.map
         (fun move -> move_piece_board board_state move "q")
         (moves_queen board_state board_state.w_turn)
     @ List.map
@@ -1848,6 +2061,10 @@ let cmp_boards bs1 bs2 =
 let move bs cmd =
   (*let _ = List.map (fun (_, _, b) -> print_board b) (pseudolegal_moves bs)
     in*)
+  (* let _ = if bs.w_castle_l then print_int 1 else print_int 0 in
+  let _ = if bs.w_castle_r then print_int 1 else print_int 0 in
+  let _ = if bs.b_castle_l then print_int 1 else print_int 0 in
+  let _ = if bs.b_castle_r then print_int 1 else print_int 0 in *)
   let move_set = all_legal_moves (pseudolegal_moves bs) in
 
   let s, e = process_square cmd in
