@@ -20,6 +20,7 @@ let rec move_game mv bs =
     let _ = ANSITerminal.print_string [ ANSITerminal.green ]
     "It's a draw by repetition!\n" in Command.parse "quit" 
     else m) in
+
     
   match Command.get_command m with
   | "a1 g8" ->
@@ -59,6 +60,25 @@ let rec move_game mv bs =
           ANSITerminal.print_string [ ANSITerminal.green ]
           "Thank you for playing chess!\n\n";
           endgame ()
+        else
+
+        if List.length (State.all_legal_moves 
+          (State.pseudolegal_moves nbs)) = 0 
+        then
+          if State.in_check nbs then
+            let _ = State.print_board nbs in
+            ANSITerminal.print_string [ ANSITerminal.green ]
+            ("Checkmate, " ^ State.get_turn bs ^ " wins!\n");
+            ANSITerminal.print_string [ ANSITerminal.green ]
+            "Thank you for playing chess!\n\n";
+            endgame()
+          else
+            let _ = State.print_board nbs in
+            ANSITerminal.print_string [ ANSITerminal.green ]
+            "It's a draw by stalemate!\n";
+            ANSITerminal.print_string [ ANSITerminal.green ]
+            "Thank you for playing chess!\n\n";
+            endgame()
         else
         
         let _ = 
