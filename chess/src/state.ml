@@ -689,19 +689,16 @@ let rec get_bish_moves board_state white_turn bish_pos acc =
       get_bish_moves board_state white_turn t
         ((_bishop_diag board_state white_turn
             ((flip Int64.shift_right_logical) 7)
-            a_file one_file h h []
-         @ acc)
+            a_file one_file h h [])
         @ (_bishop_diag board_state white_turn
              ((flip Int64.shift_right_logical) 9)
-             h_file one_file h h []
-          @ acc)
+             h_file one_file h h [])
         @ (_bishop_diag board_state white_turn
              ((flip Int64.shift_left) 9)
-             a_file h_file h h []
-          @ acc)
+             a_file eight_file h h [])
         @ _bishop_diag board_state white_turn
             ((flip Int64.shift_left) 7)
-            h_file h_file h h []
+            h_file eight_file h h []
         @ acc)
 
 let rec moves_to_string lst =
@@ -1844,7 +1841,7 @@ let gen_promos board_state =
     @ List.map
         (fun move -> move_piece_board board_state move "p_s")
         (moves_promote_no_cap board_state board_state.w_turn)
-  in
+  in 
   let all_promos =
     if board_state.w_turn then
       List.map
@@ -1853,10 +1850,11 @@ let gen_promos board_state =
             nm,
             {
               bs with
-              w_pawns =
+              w_pawns = 
                 Int64.logxor om (Int64.logxor nm (Int64.logxor om bs.w_pawns));
               w_queen = Int64.logor nm bs.w_queen;
-              all_whites = Int64.logor nm (Int64.logxor om bs.all_whites);
+              all_whites = 
+                Int64.logxor om (Int64.logxor nm (Int64.logxor om bs.all_whites));
               fifty_move = 0;
             } ))
         promos
@@ -1866,10 +1864,11 @@ let gen_promos board_state =
               nm,
               {
                 bs with
-                w_pawns =
+                w_pawns = 
                   Int64.logxor om (Int64.logxor nm (Int64.logxor om bs.w_pawns));
                 w_rooks = Int64.logor nm bs.w_rooks;
-                all_whites = Int64.logor nm (Int64.logxor om bs.all_whites);
+                all_whites = 
+                  Int64.logxor om (Int64.logxor nm (Int64.logxor om bs.all_whites));
                 fifty_move = 0;
               } ))
           promos
@@ -1879,10 +1878,11 @@ let gen_promos board_state =
               nm,
               {
                 bs with
-                w_pawns =
+                w_pawns = 
                   Int64.logxor om (Int64.logxor nm (Int64.logxor om bs.w_pawns));
                 w_bishops = Int64.logor nm bs.w_bishops;
-                all_whites = Int64.logor nm (Int64.logxor om bs.all_whites);
+                all_whites = 
+                  Int64.logxor om (Int64.logxor nm (Int64.logxor om bs.all_whites));
                 fifty_move = 0;
               } ))
           promos
@@ -1892,10 +1892,11 @@ let gen_promos board_state =
               nm,
               {
                 bs with
-                w_pawns =
+                w_pawns = 
                   Int64.logxor om (Int64.logxor nm (Int64.logxor om bs.w_pawns));
                 w_knights = Int64.logor nm bs.w_knights;
-                all_whites = Int64.logor nm (Int64.logxor om bs.all_whites);
+                all_whites = 
+                  Int64.logxor om (Int64.logxor nm (Int64.logxor om bs.all_whites));
                 fifty_move = 0;
               } ))
           promos
@@ -1909,7 +1910,8 @@ let gen_promos board_state =
               b_pawns =
                 Int64.logxor om (Int64.logxor nm (Int64.logxor om bs.b_pawns));
               b_queen = Int64.logor nm bs.b_queen;
-              all_blacks = Int64.logor nm (Int64.logxor om bs.all_blacks);
+              all_blacks = 
+                Int64.logxor om (Int64.logxor nm (Int64.logxor om bs.all_blacks));
               fifty_move = 0;
             } ))
         promos
@@ -1922,7 +1924,8 @@ let gen_promos board_state =
                 b_pawns =
                   Int64.logxor om (Int64.logxor nm (Int64.logxor om bs.b_pawns));
                 b_rooks = Int64.logor nm bs.b_rooks;
-                all_blacks = Int64.logor nm (Int64.logxor om bs.all_blacks);
+                all_blacks = 
+                  Int64.logxor om (Int64.logxor nm (Int64.logxor om bs.all_blacks));
                 fifty_move = 0;
               } ))
           promos
@@ -1935,7 +1938,8 @@ let gen_promos board_state =
                 b_pawns =
                   Int64.logxor om (Int64.logxor nm (Int64.logxor om bs.b_pawns));
                 b_bishops = Int64.logor nm bs.b_bishops;
-                all_blacks = Int64.logor nm (Int64.logxor om bs.all_blacks);
+                all_blacks = 
+                  Int64.logxor om (Int64.logxor nm (Int64.logxor om bs.all_blacks));
                 fifty_move = 0;
               } ))
           promos
@@ -1948,7 +1952,8 @@ let gen_promos board_state =
                 b_pawns =
                   Int64.logxor om (Int64.logxor nm (Int64.logxor om bs.b_pawns));
                 b_knights = Int64.logor nm bs.b_knights;
-                all_blacks = Int64.logor nm (Int64.logxor om bs.all_blacks);
+                all_blacks = 
+                  Int64.logxor om (Int64.logxor nm (Int64.logxor om bs.all_blacks));
                 fifty_move = 0;
               } ))
           promos
