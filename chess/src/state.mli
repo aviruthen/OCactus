@@ -122,3 +122,6 @@ val cmp_boards : board_state -> board_state -> bool
 
 val in_check : board_state -> bool
 (** Determines if player is in check *)
+
+val cmp_boards: board_state -> board_state -> bool
+(** Compares two boards to see if pieces are placed the same way on board *)
