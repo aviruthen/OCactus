@@ -34,7 +34,13 @@ let rec move_game mv bs =
       ANSITerminal.print_string [ ANSITerminal.green ]
         "Thank you for playing chess!\n\n";
       bs
-  | valid_move ->
+  | "u u" -> ANSITerminal.print_string [ ANSITerminal.green ]
+          "Move undone. Returning to a previous position\n\n";
+          let nbs = List.hd (List.tl (State.get_prev_boards bs)) in
+          State.print_board (nbs);
+          print_endline ("Enter a move (for " ^ get_turn nbs ^ "): "); 
+          move_game (String.trim (read_line ())) (nbs)
+  | valid_move -> 
       let nbs = State.move bs (Command.parse valid_move) in
       Stdlib.print_string "\n\n";
       State.print_board nbs;
@@ -66,18 +72,17 @@ let rec move_game mv bs =
           (State.pseudolegal_moves nbs)) = 0 
         then
           if State.in_check nbs then
-            let _ = State.print_board nbs in
+            let _ =
             ANSITerminal.print_string [ ANSITerminal.green ]
             ("Checkmate, " ^ State.get_turn bs ^ " wins!\n");
             ANSITerminal.print_string [ ANSITerminal.green ]
-            "Thank you for playing chess!\n\n";
+            "Thank you for playing chess!\n\n"; in
             endgame()
           else
-            let _ = State.print_board nbs in
-            ANSITerminal.print_string [ ANSITerminal.green ]
+            let _ = ANSITerminal.print_string [ ANSITerminal.green ]
             "It's a draw by stalemate!\n";
             ANSITerminal.print_string [ ANSITerminal.green ]
-            "Thank you for playing chess!\n\n";
+            "Thank you for playing chess!\n\n"; in
             endgame()
         else
         

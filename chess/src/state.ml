@@ -2141,7 +2141,8 @@ let move bs cmd =
               } )
             :: t
     in
-
+    (*let _ = List.map (fun b -> print_int (List.length (b.prev_boards))) bs.prev_boards in*)
+    (*let _ = List.map (fun b -> print_board_list (b.prev_boards)) bs.prev_boards in*)
     (*let _ = (match List.hd valid_move_list with (_,_,b) -> print_int
       b.fifty_move) in*)
     (*let _ = print_int (List.length bs.prev_boards) in*)
