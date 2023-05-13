@@ -1377,7 +1377,6 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                          |> Int64.logor new_move)
                         = 0L
                     then (
-                     print_endline "HERE1";
                      false)
                     else board_state.w_castle_r);
                   w_castle_l =
@@ -1388,7 +1387,6 @@ let move_piece_board board_state (move : Int64.t * Int64.t) (piece : string) =
                          |> Int64.logor new_move)
                         = 0L
                     then (
-                     print_endline "HERE";
                      false)
                     else board_state.w_castle_l);
                   w_rooks =
