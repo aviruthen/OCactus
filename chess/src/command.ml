@@ -9,7 +9,7 @@ let parse inp =
   if (inp |> String.lowercase_ascii |> String.trim) = "u" 
     then {command = ("u", "u")}
   else 
-  let sq_list = String.split_on_char ' ' inp in
+  let sq_list = String.split_on_char ' ' (String.trim inp) in
   if (List.length sq_list) <> 2 then raise MalformedInput else
     match sq_list with
     | a :: b :: [] -> 
