@@ -20,4 +20,4 @@ val get_command : t -> string
 (** gets the string version of the command *)
 
 exception MalformedInput
-(** represents all malformed input*)
+(** represents all malformed inputs *)

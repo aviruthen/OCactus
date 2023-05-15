@@ -664,8 +664,6 @@ let rec _bishop_diag bs white_turn move h_bord v_bord loc oloc acc =
     else if (not white_turn) && Int64.logand bs.all_blacks new_loc <> Int64.zero
     then acc
     else if
-      (*let _ = print_endline "Recursive step" in let _ = print_endline
-        (string_of_bool white_turn) in*)
       white_turn
     then
       if Int64.logand bs.all_blacks new_loc <> Int64.zero then
@@ -935,17 +933,12 @@ let enemy_attacks (board_state : board_state) : Int64.t =
   let king_atk = list_or (moves_king board_state board_state.w_turn) in
   let queen_atk = list_or (moves_queen board_state board_state.w_turn) in
   let rook_atk = list_or (moves_rook board_state board_state.w_turn) in
-  (*let _ = print_endline (Int64.to_string rook_atk) in*)
   let bishop_atk = list_or (moves_bishop board_state board_state.w_turn) in
-  (*let _ = print_endline (Int64.to_string bishop_atk) in*)
   let knight_atk = list_or (moves_knight board_state board_state.w_turn) in
-  (*let _ = print_endline (Int64.to_string knight_atk) in*)
   let pawn_atk = list_or (moves_pawn_attacks board_state board_state.w_turn) in
-  (*let _ = print_endline (Int64.to_string pawn_atk) in*)
   let promote_atk =
     list_or (moves_promote_cap board_state board_state.w_turn)
   in
-  (*let _ = print_endline (Int64.to_string promote_atk) in*)
   queen_atk |> Int64.logor king_atk |> Int64.logor rook_atk
   |> Int64.logor bishop_atk |> Int64.logor knight_atk |> Int64.logor pawn_atk
   |> Int64.logor promote_atk
@@ -960,6 +953,7 @@ let enemy_attacks (board_state : board_state) : Int64.t =
 (*                                                       *)
 (*                                                       *)
 (*********************************************************)
+
 (* we assume that the castle is possible to begin with: i.e. w/b_castle_l/r is
    true *)
 let execute_castle (board_state : board_state) (castle_side : string) :
@@ -1035,8 +1029,7 @@ let execute_castle (board_state : board_state) (castle_side : string) :
       else None
   | _ -> raise (Failure "inputs should be of the form 'wl', 'wr', 'bl', br' ")
 
-(* can't castle out of check, can't castle into check (handled elsewhere), and
-   can't castle thru check *)
+  
 let moves_kingcastle (board_state : board_state) (white_turn : bool) :
     (Int64.t * Int64.t) list =
   if white_turn && not board_state.in_check_w then
@@ -1829,9 +1822,6 @@ let promo_move move_list w_turn =
     | _ -> failwith "Invalid move entered for promotion!"
 
 let gen_promos board_state =
-  (*let _ = print_int (List.length (moves_promote_cap board_state
-    board_state.w_turn @ moves_promote_no_cap board_state board_state.w_turn))
-    in let _ = print_endline "" in*)
   let promos =
     List.map
       (fun move -> move_piece_board board_state move "p_s")
@@ -1957,8 +1947,6 @@ let gen_promos board_state =
           promos
   in
   List.map (fun (om, nm, bs) -> (om, nm, detect_check bs)) all_promos
-(*let _ = print_int (List.length all_promos) in*)
-(* in let _ = List.map (fun (_, _, bs) -> print_board bs) a *)
 
 let is_promo bs om nm =
   let last_file = Int64.shift_left Int64.minus_one 56 in
@@ -2065,16 +2053,6 @@ let process_square cmd =
     Int64.shift_left Int64.one
       ((8 * (Char.code sq2_number - 49)) + (104 - Char.code sq2_letter)) )
 
-(* Obtains the piece that the user would like to move as a string. cmd has type
-   Command.t *)
-let process_piece cmd = raise (Failure "Unimplemented")
-
-(* Given board_state, computes all legal moves (and prInt64.ts message about the
-   game ending in this step if that is the case), queries and repeatedly waits
-   for command corresponding to legal move, then recurses on BoardState
-   corresponding to chosen move *)
-let rec_func (board_state : board_state) = raise (Failure "Unimplemented")
-
 let rec print_board_list = function
   | [] -> ()
   | h :: t ->
@@ -2094,21 +2072,9 @@ let cmp_boards bs1 bs2 =
   && bs1.w_king = bs2.w_king && bs1.b_king = bs2.b_king
 
 let move bs cmd =
-  (*let _ = List.map (fun (_, _, b) -> print_board b) (pseudolegal_moves bs)
-    in*)
-  (* let _ = if bs.w_castle_l then print_int 1 else print_int 0 in let _ = if
-     bs.w_castle_r then print_int 1 else print_int 0 in let _ = if bs.b_castle_l
-     then print_int 1 else print_int 0 in let _ = if bs.b_castle_r then
-     print_int 1 else print_int 0 in *)
   let move_set = all_legal_moves (pseudolegal_moves bs) in
 
   let s, e = process_square cmd in
-  (*let _ = print_string (Int64.to_string s ^ " " ^ Int64.to_string e ^ "\n") in *)
-  (*let _ = print_moves move_set in*)
-  (* let _ = print_endline (Int64.to_string bs.ep) in let _ = print_endline
-     (string_of_int (List.length (moves_ep_captures bs true))) in let _ =
-     List.map (fun (a,b) -> print_endline ((Int64.to_string a) ^ " " ^
-     (Int64.to_string b))) (moves_ep_captures bs true) in*)
   let valid_move_list =
     List.filter (fun (a, b, _) -> s = a && e = b) move_set
   in
@@ -2139,14 +2105,6 @@ let move bs cmd =
               } )
             :: t
     in
-    (*let _ = List.map (fun b -> print_int (List.length (b.prev_boards))) bs.prev_boards in*)
-    (*let _ = List.map (fun b -> print_board_list (b.prev_boards)) bs.prev_boards in*)
-    (*let _ = (match List.hd valid_move_list with (_,_,b) -> print_int
-      b.fifty_move) in*)
-    (*let _ = print_int (List.length bs.prev_boards) in*)
-    (*let _ = print_int (List.length (List.filter (fun b -> cmp_boards b bs)
-      (bs.prev_boards))) in*)
-    (*let _ = print_board_list bs.prev_boards in*)
     if not (is_promo bs s e) then
       let om, nm, next_board = List.hd valid_move_list in
       next_board
@@ -2176,14 +2134,6 @@ let move bs cmd =
                 } )
               :: t
       in
-
-      (*let _ = (match List.hd valid_move_list with (_,_,b) -> print_int
-        b.fifty_move) in*)
-      (*let _ = print_int (List.length bs.prev_boards) in*)
-      (*let _ = print_int (List.length (List.filter (fun b -> cmp_boards b bs)
-        bs.prev_boards)) in*)
-
-      (*let _ = print_board_list bs.prev_boards in*)
       if not (is_promo bs s e) then
         let om, nm, next_board = List.hd valid_move_list in
         next_board
@@ -2191,15 +2141,6 @@ let move bs cmd =
         let _, _, nb_promo = List.hd (promo_move valid_move_list bs.w_turn) in
         nb_promo
 
-(*let _ = print_endline (string_of_bool (is_promo om nm bs next_board)) in *)
-(*let _, _, board = if List.length (gen_promos bs) = 0 then (Int64.zero,
-  Int64.zero, init_chess) else List.hd (List.tl (gen_promos bs)) in let _ =
-  print_board board in*)
-(*let _ = print_endline (string_of_int (List.length (gen_promos bs))) in*)
-
-(* let move bs cmd = let move_set = all_legal_moves (pseudolegal_moves bs) in
-   let s, e = process_square cmd in let _, _, mb = List.hd (List.filter (fun (a,
-   b, _) -> (s, e) = (a, b)) move_set) in mb *)
 let get_val board_state = board_state.b_knights
 let get_turn board_state = if board_state.w_turn then "white" else "black"
 let get_fifty board_state = board_state.fifty_move

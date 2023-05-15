@@ -31,7 +31,8 @@ val moves_king : board_state -> bool -> (Int64.t * Int64.t) list
 val moves_kingcastle : board_state -> bool -> (Int64.t * Int64.t) list
 (** Given board_state, generate all LEGAL castlings represented by (from
     position, to position) indicating king's position (true for white, false for
-    black) *)
+    black). Notably: can't castle out of check, can't castle into check, and
+    can't castle thru check *)
 
 val moves_queen : board_state -> bool -> (Int64.t * Int64.t) list
 (** Given board_state, generate all pseudolegal moves for queen (true for white,
@@ -87,16 +88,6 @@ val process_square : Command.t -> Int64.t * Int64.t
     command and the ending square they would like to move to, represented as a
     (Int64.t, Int64.t) double that corresponds to two bit boards. First argument
     has type Command.t *)
-
-val process_piece : _ -> string
-(** Obtains the piece that the user would like to move as a string First
-    argument has type Command.t *)
-
-val rec_func : board_state -> unit
-(** Given board_state, computes all legal moves (and prints message about the
-    game ending in this step if that is the case), queries and repeatedly waits
-    for command corresponding to legal move, then recurses on BoardState
-    corresponding to chosen move *)
 
 val print_board : board_state -> unit
 (** print chess board*)

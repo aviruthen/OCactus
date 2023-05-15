@@ -21,8 +21,6 @@ open State
    UI. With both black-box and glass-box testing manually, further support for
    correctness was developed. *)
 
-let state_tests = []
-
 let parse_test (name : string) (input : string) (expected_output : string) =
   name >:: fun _ ->
   assert_equal expected_output (get_command (parse input)) ~printer:Fun.id
@@ -89,17 +87,6 @@ let cmp_move_lists move_lst1 move_lst2 =
   let lst2 = List.sort_uniq Int64.compare move_lst2 in
   lst1 = lst2
 
-(*let _ = print_endline "TEST PAWNS" let _ = board_printer
-  (pseudolegal_moves_pawns init_chess) let new_board = move init_chess (parse
-  "e2 e4") let new_board1 = move new_board (parse "e7 e5") (*let _ =
-  board_printer (pseudolegal_moves_pawns new_board1)*)
-
-  let _ = print_endline "TEST ROOKS" let new_board2 = move (move new_board1
-  (parse "h2 h4")) (parse "h7 h5") let _ = board_printer
-  (pseudolegal_moves_pawns new_board2)
-
-  let new_board3 = move (move (move new_board2 (parse "g2 g4")) (parse "g7 g5"))
-  (parse "g4 h5") let _ = board_printer (pseudolegal_moves_pawns new_board3)*)
 let stalemate_moves =
   [
     "e2 e3";
@@ -507,11 +494,11 @@ let state_tests =
   ]
 
 let piece_tests = [ pawn_tests "test" init_chess ]
-let gui_tests = []
 
 let suite =
   "test suite for A2"
   >::: List.flatten
-         [ state_tests; command_tests; gui_tests; castle_tests; move_tests ]
+         [ state_tests; command_tests; castle_tests; move_tests;
+         piece_tests ]
 
 let _ = run_test_tt_main suite
