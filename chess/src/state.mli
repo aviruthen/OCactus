@@ -5,6 +5,7 @@ val init_chess : board_state
 (** Initializes a chess board before any moves have been made *)
 
 val get_val : board_state -> Int64.t
+(** Converts board state to bitboard*)
 
 val pseudolegal_moves : board_state -> (Int64.t * Int64.t * board_state) list
 (** Given board_state, generate all pseudolegal moves (piece isn't blocked and
@@ -14,6 +15,7 @@ val pseudolegal_moves : board_state -> (Int64.t * Int64.t * board_state) list
 
 val pseudolegal_moves_pawns :
   board_state -> (Int64.t * Int64.t * board_state) list
+(** Finds all pseudolegal pawn moves*)
 
 val all_legal_moves :
   (Int64.t * Int64.t * board_state) list ->
@@ -108,11 +110,11 @@ val get_prev_boards : board_state -> board_state list
     used to determine repeated-move drawing *)
 
 val cmp_boards : board_state -> board_state -> bool
-(** Compares if the pieces on two boards are in the same place
-    used to determine repeated-move drawing *)
+(** Compares if the pieces on two boards are in the same place used to determine
+    repeated-move drawing *)
 
 val in_check : board_state -> bool
 (** Determines if player is in check *)
 
-val cmp_boards: board_state -> board_state -> bool
+val cmp_boards : board_state -> board_state -> bool
 (** Compares two boards to see if pieces are placed the same way on board *)
