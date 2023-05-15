@@ -1,3 +1,8 @@
+(** This is the represntation of the chess board as well as the bulk of the game
+    functionality. It has the board state representation, the possible moves of
+    all chess pieces, processing attacks, check, checkmate, promotion,
+    en-passant and more. It also accounts for both white and black pieces. *)
+
 type board_state
 (** abstract type of board *)
 
