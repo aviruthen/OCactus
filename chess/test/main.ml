@@ -119,6 +119,8 @@ let disc_check = ["e2 e4"; "d7 d5"; "d1 e2"; "e8 d7"; "h2 h3";
                   "d7 e6"; "e4 d5"]
 let disc_ep_check = ["e2 e4"; "e7 e5"; "d2 d4"; "e5 d4"; "d1 e2"; 
                   "d4 d3"; "e4 e5"; "d7 d5"; "e5 d6"; "e8 d7"; "g1 f3"] 
+let ep_delay = ["e2 e4"; "e7 e5"; "d2 d4"; "e5 d4"; "d1 e2"; 
+                  "d4 d3"; "e4 e5"; "d7 d5"; "g1 f3"; "e8 d7"] 
 let castle_setup = ["e2 e4"; "e7 e5"; "g1 f3"; "g8 f6"; "f1 c4"; "f8 c5";
                     "d2 d3"; "d7 d6"; "b1 c3"; "b8 c6"; "c1 g5"; "c8 g4"; 
                     "d1 d2"; "d8 d7"]
@@ -132,9 +134,8 @@ let castle_setup_rook_move = ["e2 e4"; "e7 e5"; "g1 f3"; "g8 f6"; "f1 c4";
                     "f8 c5"; "d2 d3"; "d7 d6"; "b1 c3"; "b8 c6"; "c1 g5"; 
                     "c8 g4"; "d1 d2"; "d8 d7"; "h1 g1"; "h8 g8"; "g1 h1"; 
                     "g8 h8"]
-                  (* trying to move king into check from here is illegal
-                     i.e. "d7 e6" is not allowed*)
-                     
+let castle_setup_into_check_b = ["d2 d4"; "d7 d5"; "b1 c3"; "b8 c6"; "c1 g5"; 
+                    "c8 g4"; "d1 d3"; "d8 d6"; "d3 f5"]
 
 let stalemate_board = gen_board init_chess stalemate_moves
 let schl_mate_board = gen_board init_chess scholars_mate
@@ -150,6 +151,9 @@ let cskmb_board = move cskm_board (parse "h2 h3")
 let cstc_board = gen_board init_chess castle_setup_thru_check
 let csrm_board = gen_board init_chess castle_setup_rook_move
 let csrmb_board = move csrm_board (parse "e1 c1")
+let csicb_board = gen_board init_chess castle_setup_into_check_b
+let csq_board = move csicb_board (parse "a8 d8")
+let epd_board = gen_board init_chess ep_delay
 let init_pawn_moves = [
 Int64.of_int 65536; Int64.of_int 131072; Int64.of_int 262144; 
 Int64.of_int 524288;Int64.of_int 1048576; Int64.of_int 2097152; 
@@ -177,6 +181,19 @@ let castle_tests = [
   castle_test "no l castle if l rook moved w" csrm_board true [(8L, 32L)];
   castle_test "no l castle if l rook moved b" csrmb_board false
     [(Int64.shift_left 8L 56, Int64.shift_left 32L 56)];
+  castle_test "no castle into check" csicb_board false [];
+  castle_test "no castle into check" csq_board true [(8L, 32L)];
+]
+
+let move_tests = [
+  move_test_illegal "big pawn" init_chess "e2 e5";
+  move_test_illegal "castle start" init_chess "e1 g1";
+  move_test_illegal "big knight" init_chess "g1 f4";
+  move_test_illegal "bishop thru" init_chess "f1 d3";
+  move_test_illegal "big pawn black" e4_board "d7 d4";
+  move_test_illegal "castle start" e4_board "e8 c8";
+  move_test_illegal "rook thru" e4_board "a8 a6";
+  move_test_illegal "delayed en passant" epd_board "e5 d6"
 ]
 
 
@@ -239,6 +256,7 @@ let gui_tests = []
 
 let suite =
   "test suite for A2"
-  >::: List.flatten [ state_tests; command_tests; gui_tests; castle_tests ]
+  >::: List.flatten [ state_tests; command_tests; gui_tests; 
+  castle_tests; move_tests ]
 
 let _ = run_test_tt_main suite
