@@ -20,6 +20,6 @@ demo-video-url: ""
 desc: >
   Our project is a graphical user interface for chess. It supports 
   all the standard rules of chess including en-passant, castling, and pawn
-  promotion. The interface is click and click (or optionally based on user 
-  input with traditional chess notation), and the GUI is designed to both be 
-  aesthetically pleasing and smooth running.
+  promotion. The interface is through the terminal. Users move a piece [p] by entering
+  the square [p] is on and then the square they want to move [p] to. Our game
+  disallows illegal moves and identifies when a game ends in stalemate or checkmate.
