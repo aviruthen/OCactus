@@ -498,7 +498,6 @@ let piece_tests = [ pawn_tests "test" init_chess ]
 let suite =
   "test suite for A2"
   >::: List.flatten
-         [ state_tests; command_tests; castle_tests; move_tests;
-         piece_tests ]
+         [ state_tests; command_tests; castle_tests; move_tests; piece_tests ]
 
 let _ = run_test_tt_main suite

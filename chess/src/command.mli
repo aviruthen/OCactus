@@ -8,8 +8,8 @@ type t
 (** Abstract type of command *)
 
 val parse : string -> t
-(** Parses the command line argument so that we get the piece 
-    and it's desired move (should catch issues of bad command) *)
+(** Parses the command line argument so that we get the piece and it's desired
+    move (should catch issues of bad command) *)
 
 val get_command : t -> string
 (** Gets the string version of the command *)
