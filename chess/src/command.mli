@@ -8,16 +8,11 @@ type t
 (** Abstract type of command *)
 
 val parse : string -> t
-(** parse - parses the command line argument so that we get the piece 
+(** Parses the command line argument so that we get the piece 
     and it's desired move (should catch issues of bad command) *)
 
-(* val valid_actions : _ -> _
-(** where given a piece and a location, this will return a list of locations
-    where the piece can go - can eat other pieces so that would be a valid move *) *)
-
-
 val get_command : t -> string
-(** gets the string version of the command *)
+(** Gets the string version of the command *)
 
 exception MalformedInput
-(** represents all malformed inputs *)
+(** Represents all malformed inputs *)
